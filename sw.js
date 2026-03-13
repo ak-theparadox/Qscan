@@ -1,4 +1,3 @@
-// sw.js - simple cache for PWA shell
 const CACHE_NAME = 'qscan-v1';
 const ASSETS = [
   '/',
