@@ -252,9 +252,9 @@ body {
   border-radius: 14px;
   font-size: 1rem;
   font-weight: 600;
-  background: linear-gradient(135deg,#4d9fff,#1d75ff);
+  background: var(--accent);
   color: white;
-  box-shadow: 0 6px 18px rgba(77,159,255,0.35);
+  border: none;
 }
 
 #download-btn {
