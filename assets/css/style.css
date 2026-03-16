@@ -90,6 +90,12 @@ body {
   color: transparent;
 }
 
+.hero-sub {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
 /* SCANNER BOX */
 .scanner-card {
   background: var(--surface-strong);
@@ -212,18 +218,20 @@ body {
   font-size: 0.85rem;
   color: var(--muted);
   margin-bottom: 6px;
+  padding-left: 4px;
 }
 
 .textarea {
   width: 100%;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.06);
-  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.09);
+  padding: 16px 16px;
   font-size: 1rem;
   color: white;
   resize: none;
   outline: none;
+  min-height: 100px;
 }
 
 .textarea:focus {
@@ -244,14 +252,17 @@ body {
   border-radius: 14px;
   font-size: 1rem;
   font-weight: 600;
+  background: linear-gradient(135deg,#4d9fff,#1d75ff);
+  color: white;
+  box-shadow: 0 6px 18px rgba(77,159,255,0.35);
 }
 
 #download-btn {
   flex: 1;
   padding: 12px;
   border-radius: 14px;
-  background: rgba(255,255,255,0.12);
-  color: white;
+  background: rgba(255,255,255,0.08);
+  color: #cfd3e0;
   backdrop-filter: blur(10px);
 }
 
@@ -260,12 +271,17 @@ body {
   padding: 20px;
   border-radius: 20px;
   background: rgba(255,255,255,0.06);
-  border: 1px dashed rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.12);
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 240px;
   text-align: center;
+}
+
+.qr-placeholder {
+  opacity: 0.6;
+  color: var(--muted);
 }
 
 .qr-output canvas {
