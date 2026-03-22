@@ -296,3 +296,76 @@ body {
   margin: 30px 0;
   color: var(--muted);
 }
+/* =========================
+   TOOLS PAGE
+========================= */
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* TOOL CARD */
+.tool-card {
+  display: block;
+  background: var(--surface-strong);
+  border-radius: 20px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  text-decoration: none;
+  transition: all 0.25s ease;
+}
+
+/* HOVER EFFECT (premium feel) */
+.tool-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(77,159,255,0.5);
+  box-shadow: 0 10px 30px rgba(77,159,255,0.15);
+}
+
+/* ICON */
+.tool-icon {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+/* TITLE */
+.tool-title {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+/* DESCRIPTION */
+.tool-desc {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* BADGE */
+.badge {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* LOCKED CARD */
+.tool-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* DESKTOP RESPONSIVE */
+@media (min-width: 600px) {
+  .tools-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
