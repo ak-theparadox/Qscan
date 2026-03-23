@@ -27,30 +27,32 @@ body {
 .top-bar {
   position: sticky; top: 0; z-index: 50;
   padding: 14px 18px;
-  display: flex; justify-content: space-between; align-items: center;
-  background: rgba(11,15,25,0.7); backdrop-filter: blur(14px);
+  display: flex;
+  align-items: center;   /* ✅ removed space-between */
+  background: rgba(11,15,25,0.7);
+  backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-
 /* CLICKABLE BRAND */
 .brand { display: flex; align-items: center; gap: 8px; }
 
 /* NON-CLICKABLE BRAND TEXT (white, bold, bigger) */
+
 .brand-text {
-  font-size: 1.12rem;   /* larger than nav items */
+  font-size: 1.12rem;
   font-weight: 800;
   color: #ffffff;
   line-height:1;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-right:6px; /* tiny spacing before nav */
-  cursor: default;      /* no click */
-  user-select: none;    /* cannot select */
+  margin-right:6px;
+  cursor: default;
+  user-select: none;
 }
 
 .brand-text:hover {
-  opacity: 1;           /* no hover effect */
+  opacity: 1;
   cursor: default;
 }
 
@@ -59,21 +61,25 @@ body {
   display: flex;
   align-items: center;
   margin-left: auto;
+  width: max-content;
 }
-
 .nav-link:first-child {
   margin-left: 0;
 }
 
 .nav-link {
   margin-left: 6px;
-}
-.nav-link {
   padding: 6px 12px;
   border-radius: 999px;
   color: var(--muted);
   text-decoration: none;
   font-size: 0.85rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.nav-link:first-child {
+  margin-left: 0;
 }
 
 .nav-link.active {
