@@ -31,7 +31,6 @@ body {
   padding: 14px 18px;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* 🔥 ADD THIS BACK */
   background: rgba(11,15,25,0.7);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -64,11 +63,11 @@ body {
   display: flex;
   align-items: center;
   margin-left: auto;
+  gap: 6px;
   width: max-content;
 }
 
 .nav-link {
-  margin-left: 6px;
   padding: 6px 12px;
   border-radius: 999px;
   color: var(--muted);
@@ -76,10 +75,6 @@ body {
   font-size: 0.85rem;
   white-space: nowrap;
   transition: all 0.2s ease;
-}
-
-.nav-link:first-child {
-  margin-left: 0;
 }
 
 .nav-link.active {
