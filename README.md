@@ -84,7 +84,7 @@ Future direction:
 
 🌐 Live
 
-👉 https://qscan.in
+👉 https://www.qscan.in
 
 ---
 
