@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="icon" href="/assets/img/logo.png">
+<link rel="manifest" href="/manifest.webmanifest">
+
+<meta charset="UTF-8" />
+<title>WiFi QR Generator - Qscan</title>
+<meta name="description" content="Generate WiFi QR codes instantly. Share your WiFi without typing password.">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" href="/assets/css/style.css" />
+
+</head>
+
+<body>
+
+<header class="top-bar">
+  <div class="brand">
+    <span class="brand-text">Qscan</span>
+  </div>
+
+  <nav class="nav">
+    <a href="/tools.html" class="nav-link">Tools</a>
+    <a href="/" class="nav-link">Scan</a>
+    <a href="/generator.html" class="nav-link">Generate</a>
+  </nav>
+</header>
+
+<main class="main">
+
+<section class="hero">
+  <h1>WiFi QR Generator</h1>
+  <p class="hero-sub">Share WiFi instantly without typing password</p>
+</section>
+
+<section class="generator-card">
+
+  <!-- SSID -->
+  <label class="label">WiFi Name (SSID)</label>
+  <input id="ssid" class="textarea" placeholder="Enter WiFi name" />
+
+  <!-- PASSWORD -->
+  <label class="label" style="margin-top:12px;">Password</label>
+  <input id="password" class="textarea" placeholder="Enter password" />
+
+  <!-- SECURITY -->
+  <label class="label" style="margin-top:12px;">Security</label>
+  <select id="security" class="textarea">
+    <option value="WPA">WPA/WPA2</option>
+    <option value="WEP">WEP</option>
+    <option value="nopass">No Password</option>
+  </select>
+
+  <!-- BUTTONS -->
+  <div class="generator-controls">
+    <button id="generate-btn" class="btn primary">Generate</button>
+    <button id="download-btn" class="btn small" disabled>Download</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="qr-output" class="qr-output">
+    <p class="qr-placeholder small">Your WiFi QR will appear here</p>
+  </div>
+
+</section>
+
+</main>
+
+<footer class="footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+<script>
+
+const ssid = document.getElementById("ssid");
+const password = document.getElementById("password");
+const security = document.getElementById("security");
+
+const generateBtn = document.getElementById("generate-btn");
+const downloadBtn = document.getElementById("download-btn");
+const outputBox = document.getElementById("qr-output");
+
+let qrCanvas = null;
+
+function generateQR() {
+  const S = ssid.value.trim();
+  const P = password.value.trim();
+  const T = security.value;
+
+  if (!S) {
+    outputBox.innerHTML = "<p class='qr-placeholder'>Enter WiFi name</p>";
+    return;
+  }
+
+  const wifiString = `WIFI:T:${T};S:${S};P:${P};;`;
+
+  outputBox.innerHTML = "";
+
+  QRCode.toCanvas(wifiString, { width: 240 }, (err, canvas) => {
+    if (err) {
+      outputBox.innerHTML = "<p>Error generating QR</p>";
+      return;
+    }
+
+    qrCanvas = canvas;
+    outputBox.appendChild(canvas);
+    downloadBtn.disabled = false;
+  });
+}
+
+generateBtn.onclick = generateQR;
+
+/* 🔥 AUTO GENERATE (premium UX) */
+ssid.addEventListener("input", generateQR);
+password.addEventListener("input", generateQR);
+security.addEventListener("change", generateQR);
+
+downloadBtn.onclick = () => {
+  if (!qrCanvas) return;
+
+  const link = document.createElement("a");
+  link.download = "wifi_qr.png";
+  link.href = qrCanvas.toDataURL("image/png");
+  link.click();
+};
+
+</script>
+
+</body>
+</html>
