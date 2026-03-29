@@ -36,8 +36,12 @@ body {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 /* CLICKABLE BRAND */
-.brand { display: flex; align-items: center; gap: 8px; }
-
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1; /* 🔥 THIS FIXES EVERYTHING */
+}
 /* NON-CLICKABLE BRAND TEXT (white, bold, bigger) */
 
 .brand-text {
@@ -62,9 +66,7 @@ body {
 .nav {
   display: flex;
   align-items: center;
-  margin-left: auto;
   gap: 6px;
-  width: max-content;
 }
 
 .nav-link {
