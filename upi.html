@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="icon" href="/assets/img/logo.png">
+<link rel="manifest" href="/manifest.webmanifest">
+
+<meta charset="UTF-8" />
+<title>UPI QR Generator - Qscan</title>
+<meta name="description" content="Generate UPI payment QR instantly. Accept payments via PhonePe, Google Pay, Paytm.">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" href="/assets/css/style.css" />
+
+</head>
+
+<body>
+
+<header class="top-bar">
+  <div class="brand">
+    <span class="brand-text">Qscan</span>
+  </div>
+
+  <nav class="nav">
+    <a href="/tools.html" class="nav-link">Tools</a>
+    <a href="/" class="nav-link">Scan</a>
+    <a href="/generator.html" class="nav-link">Generate</a>
+  </nav>
+</header>
+
+<main class="main">
+
+<section class="hero">
+  <h1>UPI QR Generator</h1>
+  <p class="hero-sub">Accept payments instantly anywhere</p>
+</section>
+
+<section class="generator-card">
+
+  <!-- UPI ID -->
+  <label class="label">UPI ID</label>
+  <input id="upi" class="textarea" placeholder="example@upi" />
+
+  <!-- NAME -->
+  <label class="label" style="margin-top:12px;">Name</label>
+  <input id="name" class="textarea" placeholder="Your name / business" />
+
+  <!-- AMOUNT -->
+  <label class="label" style="margin-top:12px;">Amount (optional)</label>
+  <input id="amount" class="textarea" placeholder="Enter amount (₹)" type="number" />
+
+  <!-- NOTE -->
+  <label class="label" style="margin-top:12px;">Note (optional)</label>
+  <input id="note" class="textarea" placeholder="Payment note" />
+
+  <!-- BUTTONS -->
+  <div class="generator-controls">
+    <button id="generate-btn" class="btn primary">Generate</button>
+    <button id="download-btn" class="btn small" disabled>Download</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="qr-output" class="qr-output">
+    <p class="qr-placeholder small">Your UPI QR will appear here</p>
+  </div>
+
+</section>
+
+</main>
+
+<footer class="footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
+<script>
+
+const upi = document.getElementById("upi");
+const name = document.getElementById("name");
+const amount = document.getElementById("amount");
+const note = document.getElementById("note");
+
+const generateBtn = document.getElementById("generate-btn");
+const downloadBtn = document.getElementById("download-btn");
+const outputBox = document.getElementById("qr-output");
+
+let qrCanvas = null;
+
+function generateQR() {
+  const pa = upi.value.trim();
+  const pn = name.value.trim();
+  const am = amount.value.trim();
+  const tn = note.value.trim();
+
+  if (!pa) {
+    outputBox.innerHTML = "<p class='qr-placeholder'>Enter UPI ID</p>";
+    return;
+  }
+
+  let upiUrl = `upi://pay?pa=${pa}`;
+
+  if (pn) upiUrl += `&pn=${encodeURIComponent(pn)}`;
+  if (am) upiUrl += `&am=${am}`;
+  if (tn) upiUrl += `&tn=${encodeURIComponent(tn)}`;
+
+  outputBox.innerHTML = "";
+
+  QRCode.toCanvas(upiUrl, { width: 240 }, (err, canvas) => {
+    if (err) {
+      outputBox.innerHTML = "<p>Error generating QR</p>";
+      return;
+    }
+
+    qrCanvas = canvas;
+    outputBox.appendChild(canvas);
+    downloadBtn.disabled = false;
+  });
+}
+
+generateBtn.onclick = generateQR;
+
+/* 🔥 AUTO GENERATE */
+upi.addEventListener("input", generateQR);
+name.addEventListener("input", generateQR);
+amount.addEventListener("input", generateQR);
+note.addEventListener("input", generateQR);
+
+downloadBtn.onclick = () => {
+  if (!qrCanvas) return;
+
+  const link = document.createElement("a");
+  link.download = "upi_qr.png";
+  link.href = qrCanvas.toDataURL("image/png");
+  link.click();
+};
+
+</script>
+
+</body>
+</html>
