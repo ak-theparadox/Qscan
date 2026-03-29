@@ -379,3 +379,18 @@ body {
     grid-template-columns: 1fr 1fr;
   }
 }
+/* INPUT (for wifi page) */
+input.textarea, select.textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.09);
+  padding: 14px 14px;
+  font-size: 1rem;
+  color: white;
+  outline: none;
+}
+
+select.textarea {
+  cursor: pointer;
+}
