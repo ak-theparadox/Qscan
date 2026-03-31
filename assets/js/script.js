@@ -36,7 +36,8 @@ function renderQR(text, outputBox, downloadBtn, setCanvas) {
    🔍 SCANNER
 ================================================== */
 if (isScannerPage) {
-
+const torchBtn = document.getElementById("torch-btn");
+let torchOn = false;
 const previewId = "preview";
 const flipBtn = document.getElementById("flip-btn");
 const uploadBtn = document.getElementById("upload-btn");
@@ -95,6 +96,31 @@ copyBtn.onclick = async () => {
 };
 
 /* START CAMERA */
+torchBtn.onclick = async () => {
+
+  if (!qrScanner) return;
+
+  try {
+    const track = qrScanner.getRunningTrack();
+
+    if (!track) {
+      alert("Torch not supported on this device");
+      return;
+    }
+
+    torchOn = !torchOn;
+
+    await track.applyConstraints({
+      advanced: [{ torch: torchOn }]
+    });
+
+    torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
+
+  } catch (err) {
+    alert("Torch not supported on this device");
+    console.error(err);
+  }
+};
 async function startScanner() {
 
   cameras = await Html5Qrcode.getCameras();
