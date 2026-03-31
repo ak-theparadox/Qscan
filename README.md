@@ -73,13 +73,6 @@ Qscan is built with a strict privacy-first approach:
 
 Qscan aims to become a complete QR toolkit platform, especially optimized for Indian users and mobile-first usage.
 
-Future direction:
-
-- More specialized QR tools
-- Better UX & automation
-- Monetization via premium features
-- SEO-driven growth
-
 ---
 
 🌐 Live
