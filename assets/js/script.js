@@ -131,17 +131,35 @@ startScanner();
 
 /* 🔦 TORCH */
 if (torchBtn) {
+
+  let torchSupported = false;
+
+  /* CHECK SUPPORT AFTER CAMERA START */
+  async function checkTorchSupport() {
+    try {
+      const track = qrScanner.getRunningTrack();
+      const capabilities = track.getCapabilities();
+
+      if (capabilities && capabilities.torch) {
+        torchSupported = true;
+      } else {
+        torchBtn.style.display = "none"; // 🔥 hide button
+      }
+    } catch {
+      torchBtn.style.display = "none";
+    }
+  }
+
+  /* CALL AFTER START */
+  setTimeout(checkTorchSupport, 1000);
+
+  /* TOGGLE TORCH */
   torchBtn.onclick = async () => {
 
-    if (!qrScanner) return;
+    if (!torchSupported) return;
 
     try {
       const track = qrScanner.getRunningTrack();
-
-      if (!track) {
-        alert("Torch not supported on this device");
-        return;
-      }
 
       torchOn = !torchOn;
 
@@ -152,7 +170,6 @@ if (torchBtn) {
       torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
 
     } catch (err) {
-      alert("Torch not supported on this device");
       console.error(err);
     }
   };
