@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<link rel="icon" href="/assets/img/logo.png">
+<link rel="manifest" href="/manifest.webmanifest">
+
+<meta charset="UTF-8" />
+<title>WhatsApp QR Generator - Qscan</title>
+<meta name="description" content="Generate WhatsApp QR code instantly. Start chat without saving number.">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="stylesheet" href="/assets/css/style.css" />
+
+</head>
+
+<body>
+
+<header class="top-bar">
+  <div class="brand">
+    <span class="brand-text">Qscan</span>
+  </div>
+
+  <nav class="nav">
+    <a href="/tools.html" class="nav-link">Tools</a>
+    <a href="/" class="nav-link">Scan</a>
+    <a href="/generator.html" class="nav-link">Generate</a>
+  </nav>
+</header>
+
+<main class="main">
+
+<section class="hero">
+  <h1>WhatsApp QR Generator</h1>
+  <p class="hero-sub">Start chat without saving number</p>
+</section>
+
+<section class="generator-card">
+
+  <!-- PHONE -->
+  <label class="label">Phone Number</label>
+  <input id="phone" class="textarea" placeholder="e.g. 919876543210" />
+
+  <!-- MESSAGE -->
+  <label class="label" style="margin-top:12px;">Message (optional)</label>
+  <input id="message" class="textarea" placeholder="Type your message..." />
+
+  <!-- BUTTONS -->
+  <div class="generator-controls">
+    <button id="generate-btn" class="btn primary">Generate</button>
+    <button id="download-btn" class="btn small" disabled>Download</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div id="qr-output" class="qr-output">
+    <p class="qr-placeholder small">Your WhatsApp QR will appear here</p>
+  </div>
+
+</section>
+
+</main>
+
+<footer class="footer"></footer>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<script src="/assets/js/script.js"></script>
+
+</body>
+</html>
