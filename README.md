@@ -6,7 +6,7 @@ Scan, generate, and manage QR codes instantly — all directly in your browser w
 
 ---
 
-⚡ Features
+📝 Features
 
 🔍 QR & Barcode Scanner
 
