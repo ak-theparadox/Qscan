@@ -36,12 +36,14 @@ function renderQR(text, outputBox, downloadBtn, setCanvas) {
    🔍 SCANNER
 ================================================== */
 if (isScannerPage) {
-const torchBtn = document.getElementById("torch-btn");
-let torchOn = false;
+
 const previewId = "preview";
 const flipBtn = document.getElementById("flip-btn");
 const uploadBtn = document.getElementById("upload-btn");
 const fileInput = document.getElementById("file-input");
+
+const torchBtn = document.getElementById("torch-btn");
+let torchOn = false;
 
 const popup = document.getElementById("result-popup");
 const closePopupBtn = document.getElementById("close-popup");
@@ -52,10 +54,12 @@ let qrScanner = null;
 let cameras = [];
 let currentCam = 0;
 
+/* URL DETECT */
 function isURL(text) {
   return /^https?:\/\//i.test(text);
 }
 
+/* SHOW RESULT */
 function showPopup(text) {
 
   if (navigator.vibrate) navigator.vibrate(120);
@@ -96,31 +100,6 @@ copyBtn.onclick = async () => {
 };
 
 /* START CAMERA */
-torchBtn.onclick = async () => {
-
-  if (!qrScanner) return;
-
-  try {
-    const track = qrScanner.getRunningTrack();
-
-    if (!track) {
-      alert("Torch not supported on this device");
-      return;
-    }
-
-    torchOn = !torchOn;
-
-    await track.applyConstraints({
-      advanced: [{ torch: torchOn }]
-    });
-
-    torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
-
-  } catch (err) {
-    alert("Torch not supported on this device");
-    console.error(err);
-  }
-};
 async function startScanner() {
 
   cameras = await Html5Qrcode.getCameras();
@@ -150,12 +129,45 @@ async function startScanner() {
 
 startScanner();
 
+/* 🔦 TORCH */
+if (torchBtn) {
+  torchBtn.onclick = async () => {
+
+    if (!qrScanner) return;
+
+    try {
+      const track = qrScanner.getRunningTrack();
+
+      if (!track) {
+        alert("Torch not supported on this device");
+        return;
+      }
+
+      torchOn = !torchOn;
+
+      await track.applyConstraints({
+        advanced: [{ torch: torchOn }]
+      });
+
+      torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
+
+    } catch (err) {
+      alert("Torch not supported on this device");
+      console.error(err);
+    }
+  };
+}
+
 /* FLIP CAMERA */
 flipBtn.onclick = async () => {
 
   if (!qrScanner || !cameras.length) return;
 
   await qrScanner.stop();
+
+  /* RESET TORCH */
+  torchOn = false;
+  if (torchBtn) torchBtn.innerHTML = "🔦 Torch";
 
   currentCam = (currentCam + 1) % cameras.length;
 
@@ -190,7 +202,7 @@ fileInput.onchange = async (e) => {
 
 
 /* ==================================================
-   ⚡ GENERATOR (TEXT / URL)
+   ⚡ GENERATOR
 ================================================== */
 if (isGeneratorPage) {
 
@@ -209,13 +221,9 @@ function generateTextQR() {
   });
 }
 
-/* CLICK */
 generateBtn.onclick = generateTextQR;
-
-/* AUTO */
 input.addEventListener("input", generateTextQR);
 
-/* DOWNLOAD */
 downloadBtn.onclick = () => {
   if (!qrCanvas) return;
 
@@ -270,14 +278,10 @@ function generateWhatsAppQR() {
   });
 }
 
-/* CLICK */
 generateBtn.onclick = generateWhatsAppQR;
-
-/* AUTO */
 phone.addEventListener("input", generateWhatsAppQR);
 message.addEventListener("input", generateWhatsAppQR);
 
-/* DOWNLOAD */
 downloadBtn.onclick = () => {
   if (!qrCanvas) return;
 
