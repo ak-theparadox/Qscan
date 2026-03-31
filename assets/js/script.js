@@ -3,10 +3,11 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ===== PAGE DETECTION ===== */
 const isScannerPage = document.getElementById("preview") !== null;
 const isGeneratorPage = document.getElementById("qr-text") !== null;
+const isWhatsappPage = document.getElementById("phone") !== null;
 
 
 /* ==================================================
-   🔥 COMMON QR RENDER FUNCTION (REUSABLE)
+   🔥 COMMON QR RENDER FUNCTION
 ================================================== */
 function renderQR(text, outputBox, downloadBtn, setCanvas) {
 
@@ -174,8 +175,7 @@ const outputBox = document.getElementById("qr-output");
 
 let qrCanvas = null;
 
-/* GENERATE */
-function generateQR() {
+function generateTextQR() {
   const text = input.value.trim();
 
   renderQR(text, outputBox, downloadBtn, (canvas) => {
@@ -184,10 +184,10 @@ function generateQR() {
 }
 
 /* CLICK */
-generateBtn.onclick = generateQR;
+generateBtn.onclick = generateTextQR;
 
-/* 🔥 AUTO GENERATE */
-input.addEventListener("input", generateQR);
+/* AUTO */
+input.addEventListener("input", generateTextQR);
 
 /* DOWNLOAD */
 downloadBtn.onclick = () => {
@@ -195,6 +195,68 @@ downloadBtn.onclick = () => {
 
   const link = document.createElement("a");
   link.download = "qscan_qr.png";
+  link.href = qrCanvas.toDataURL("image/png");
+  link.click();
+};
+
+}
+
+
+/* ==================================================
+   💬 WHATSAPP GENERATOR
+================================================== */
+if (isWhatsappPage) {
+
+const phone = document.getElementById("phone");
+const message = document.getElementById("message");
+
+const generateBtn = document.getElementById("generate-btn");
+const downloadBtn = document.getElementById("download-btn");
+const outputBox = document.getElementById("qr-output");
+
+let qrCanvas = null;
+
+function generateWhatsAppQR() {
+
+  let number = phone.value.trim();
+  const msg = message.value.trim();
+
+  if (!number) {
+    outputBox.innerHTML = "<p class='qr-placeholder'>Enter phone number</p>";
+    return;
+  }
+
+  number = number.replace(/\D/g, "");
+
+  if (number.length < 10) {
+    outputBox.innerHTML = "<p class='qr-placeholder'>Invalid number</p>";
+    return;
+  }
+
+  let waUrl = `https://wa.me/${number}`;
+
+  if (msg) {
+    waUrl += `?text=${encodeURIComponent(msg)}`;
+  }
+
+  renderQR(waUrl, outputBox, downloadBtn, (canvas) => {
+    qrCanvas = canvas;
+  });
+}
+
+/* CLICK */
+generateBtn.onclick = generateWhatsAppQR;
+
+/* AUTO */
+phone.addEventListener("input", generateWhatsAppQR);
+message.addEventListener("input", generateWhatsAppQR);
+
+/* DOWNLOAD */
+downloadBtn.onclick = () => {
+  if (!qrCanvas) return;
+
+  const link = document.createElement("a");
+  link.download = "whatsapp_qr.png";
   link.href = qrCanvas.toDataURL("image/png");
   link.click();
 };
