@@ -1,10 +1,39 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-/* --DETECTS WHICH PAGE WE ARE ON -- */
+/* ===== PAGE DETECTION ===== */
 const isScannerPage = document.getElementById("preview") !== null;
 const isGeneratorPage = document.getElementById("qr-text") !== null;
 
-/* ########### SCANNER ############# */
+
+/* ==================================================
+   🔥 COMMON QR RENDER FUNCTION (REUSABLE)
+================================================== */
+function renderQR(text, outputBox, downloadBtn, setCanvas) {
+
+  if (!text) {
+    outputBox.innerHTML = `<p class="qr-placeholder">Enter text first</p>`;
+    return;
+  }
+
+  outputBox.innerHTML = "";
+
+  QRCode.toCanvas(text, { width: 240 }, (err, canvas) => {
+
+    if (err) {
+      outputBox.innerHTML = `<p>Error generating QR</p>`;
+      return;
+    }
+
+    setCanvas(canvas);
+    outputBox.appendChild(canvas);
+    downloadBtn.disabled = false;
+  });
+}
+
+
+/* ==================================================
+   🔍 SCANNER
+================================================== */
 if (isScannerPage) {
 
 const previewId = "preview";
@@ -27,9 +56,7 @@ function isURL(text) {
 
 function showPopup(text) {
 
-  if (navigator.vibrate) {
-    navigator.vibrate(120);
-  }
+  if (navigator.vibrate) navigator.vibrate(120);
 
   if (isURL(text)) {
     resultText.innerHTML = `<a href="${text}" target="_blank">${text}</a>`;
@@ -44,9 +71,8 @@ function showPopup(text) {
 
 closePopupBtn.onclick = () => popup.classList.add("hidden");
 
-/* -------- COPY BUTTON WITH TICK FEEDBACK -------- */
+/* COPY */
 copyBtn.onclick = async () => {
-
   const text = resultText.textContent;
 
   try {
@@ -55,9 +81,7 @@ copyBtn.onclick = async () => {
     copyBtn.innerHTML = "✓ Copied";
     copyBtn.style.background = "#28c76f";
 
-    if (navigator.vibrate) {
-      navigator.vibrate(40);
-    }
+    if (navigator.vibrate) navigator.vibrate(40);
 
     setTimeout(() => {
       copyBtn.innerHTML = "Copy";
@@ -69,12 +93,12 @@ copyBtn.onclick = async () => {
   }
 };
 
-/* ------------ START CAMERA ---------------- */
+/* START CAMERA */
 async function startScanner() {
 
   cameras = await Html5Qrcode.getCameras();
 
-  if (!cameras || cameras.length === 0) {
+  if (!cameras.length) {
     alert("No camera detected.");
     return;
   }
@@ -84,9 +108,7 @@ async function startScanner() {
     cam.label.toLowerCase().includes("rear")
   );
 
-  if (backCamIndex === -1) {
-    backCamIndex = cameras.length - 1;
-  }
+  if (backCamIndex === -1) backCamIndex = cameras.length - 1;
 
   currentCam = backCamIndex;
 
@@ -94,17 +116,14 @@ async function startScanner() {
 
   await qrScanner.start(
     { deviceId: { exact: cameras[currentCam].id } },
-    {
-      fps: 15,
-      qrbox: { width: 260, height: 260 }
-    },
+    { fps: 15, qrbox: { width: 260, height: 260 } },
     decoded => showPopup(decoded)
   );
 }
 
 startScanner();
 
-/* ------------ FLIP CAMERA ---------------- */
+/* FLIP CAMERA */
 flipBtn.onclick = async () => {
 
   if (!qrScanner || !cameras.length) return;
@@ -115,15 +134,12 @@ flipBtn.onclick = async () => {
 
   await qrScanner.start(
     { deviceId: { exact: cameras[currentCam].id } },
-    {
-      fps: 15,
-      qrbox: { width: 260, height: 260 }
-    },
+    { fps: 15, qrbox: { width: 260, height: 260 } },
     decoded => showPopup(decoded)
   );
 };
 
-/* ------------ UPLOAD QR IMAGE ---------------- */
+/* UPLOAD IMAGE */
 uploadBtn.onclick = () => fileInput.click();
 
 fileInput.onchange = async (e) => {
@@ -145,10 +161,10 @@ fileInput.onchange = async (e) => {
 
 }
 
-/* ##################################################
-################### GENERATOR #####################
-################################################## */
 
+/* ==================================================
+   ⚡ GENERATOR (TEXT / URL)
+================================================== */
 if (isGeneratorPage) {
 
 const input = document.getElementById("qr-text");
@@ -158,32 +174,23 @@ const outputBox = document.getElementById("qr-output");
 
 let qrCanvas = null;
 
-generateBtn.onclick = () => {
-
+/* GENERATE */
+function generateQR() {
   const text = input.value.trim();
 
-  if (!text) {
-    outputBox.innerHTML = `<p class="muted small">Enter text first</p>`;
-    return;
-  }
-
-  outputBox.innerHTML = "";
-
-  QRCode.toCanvas(text, { width: 240 }, (err, canvas) => {
-
-    if (err) {
-      outputBox.innerHTML = `<p class="muted small">Error generating QR</p>`;
-      return;
-    }
-
+  renderQR(text, outputBox, downloadBtn, (canvas) => {
     qrCanvas = canvas;
-    outputBox.appendChild(canvas);
-    downloadBtn.disabled = false;
   });
-};
+}
 
+/* CLICK */
+generateBtn.onclick = generateQR;
+
+/* 🔥 AUTO GENERATE */
+input.addEventListener("input", generateQR);
+
+/* DOWNLOAD */
 downloadBtn.onclick = () => {
-
   if (!qrCanvas) return;
 
   const link = document.createElement("a");
