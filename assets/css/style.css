@@ -271,9 +271,23 @@ body {
   flex: 1;
   padding: 12px;
   border-radius: 14px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+/* HOVER / ACTIVE FEEL */
+#download-btn:active {
+  transform: scale(0.97);
+}
+
+/* DISABLED STATE */
+#download-btn:disabled {
   background: rgba(255,255,255,0.08);
-  color: #cfd3e0;
-  backdrop-filter: blur(10px);
+  color: #9aa0b1;
+  cursor: not-allowed;
 }
 
 .qr-output {
