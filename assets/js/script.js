@@ -154,7 +154,7 @@ if (torchBtn) {
     } catch (err) {
 
       /* 🔥 FAIL GRACEFULLY */
-      torchBtn.innerHTML = "❌ Not supported";
+      torchBtn.innerHTML ="⚠️ Limited support";
 
       setTimeout(() => {
         torchBtn.innerHTML = "🔦 Torch";
