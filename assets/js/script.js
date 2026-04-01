@@ -125,38 +125,31 @@ async function startScanner() {
     { fps: 15, qrbox: { width: 260, height: 260 } },
     decoded => showPopup(decoded)
   );
-}
 
-startScanner();
-
-/* 🔦 TORCH */
-if (torchBtn) {
-
-  let torchSupported = false;
-
-  /* CHECK SUPPORT AFTER CAMERA START */
-  async function checkTorchSupport() {
+  /* 🔥 TORCH DETECTION AFTER CAMERA START */
+  if (torchBtn) {
     try {
       const track = qrScanner.getRunningTrack();
       const capabilities = track.getCapabilities();
 
       if (capabilities && capabilities.torch) {
-        torchSupported = true;
+        torchBtn.style.display = "inline-block";
       } else {
-        torchBtn.style.display = "none"; // 🔥 hide button
+        torchBtn.style.display = "none";
       }
     } catch {
       torchBtn.style.display = "none";
     }
   }
+}
 
-  /* CALL AFTER START */
-  setTimeout(checkTorchSupport, 1000);
+startScanner();
 
-  /* TOGGLE TORCH */
+/* 🔦 TORCH TOGGLE */
+if (torchBtn) {
   torchBtn.onclick = async () => {
 
-    if (!torchSupported) return;
+    if (!qrScanner) return;
 
     try {
       const track = qrScanner.getRunningTrack();
@@ -170,7 +163,7 @@ if (torchBtn) {
       torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
 
     } catch (err) {
-      console.error(err);
+      console.error("Torch failed:", err);
     }
   };
 }
