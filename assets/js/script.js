@@ -126,26 +126,15 @@ async function startScanner() {
     decoded => showPopup(decoded)
   );
 
-  /* 🔥 TORCH DETECTION AFTER CAMERA START */
+  /* 🔥 ALWAYS SHOW TORCH BUTTON */
   if (torchBtn) {
-    try {
-      const track = qrScanner.getRunningTrack();
-      const capabilities = track.getCapabilities();
-
-      if (capabilities && capabilities.torch) {
-        torchBtn.style.display = "inline-block";
-      } else {
-        torchBtn.style.display = "none";
-      }
-    } catch {
-      torchBtn.style.display = "none";
-    }
+    torchBtn.style.display = "inline-block";
   }
 }
 
 startScanner();
 
-/* 🔦 TORCH TOGGLE */
+/* 🔦 TORCH TOGGLE (SMART HANDLING) */
 if (torchBtn) {
   torchBtn.onclick = async () => {
 
@@ -163,7 +152,15 @@ if (torchBtn) {
       torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
 
     } catch (err) {
-      console.error("Torch failed:", err);
+
+      /* 🔥 FAIL GRACEFULLY */
+      torchBtn.innerHTML = "❌ Not supported";
+
+      setTimeout(() => {
+        torchBtn.innerHTML = "🔦 Torch";
+      }, 1500);
+
+      console.log("Torch not supported:", err);
     }
   };
 }
@@ -175,7 +172,7 @@ flipBtn.onclick = async () => {
 
   await qrScanner.stop();
 
-  /* RESET TORCH */
+  /* RESET TORCH UI */
   torchOn = false;
   if (torchBtn) torchBtn.innerHTML = "🔦 Torch";
 
@@ -209,7 +206,6 @@ fileInput.onchange = async (e) => {
 };
 
 }
-
 
 /* ==================================================
    ⚡ GENERATOR
