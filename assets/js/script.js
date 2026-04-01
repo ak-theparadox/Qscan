@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
 const isScannerPage = document.getElementById("preview") !== null;
 const isGeneratorPage = document.getElementById("qr-text") !== null;
 const isWhatsappPage = document.getElementById("phone") !== null;
+const isUpiPage = document.getElementById("upi") !== null;
 
 
 /* ==================================================
@@ -13,6 +14,7 @@ function renderQR(text, outputBox, downloadBtn, setCanvas) {
 
   if (!text) {
     outputBox.innerHTML = `<p class="qr-placeholder">Enter text first</p>`;
+    downloadBtn.disabled = true; // 🔥 FIX
     return;
   }
 
@@ -54,12 +56,10 @@ let qrScanner = null;
 let cameras = [];
 let currentCam = 0;
 
-/* URL DETECT */
 function isURL(text) {
   return /^https?:\/\//i.test(text);
 }
 
-/* SHOW RESULT */
 function showPopup(text) {
 
   if (navigator.vibrate) navigator.vibrate(120);
@@ -77,13 +77,11 @@ function showPopup(text) {
 
 closePopupBtn.onclick = () => popup.classList.add("hidden");
 
-/* COPY */
 copyBtn.onclick = async () => {
   const text = resultText.textContent;
 
   try {
     await navigator.clipboard.writeText(text);
-
     copyBtn.innerHTML = "✓ Copied";
     copyBtn.style.background = "#28c76f";
 
@@ -99,7 +97,6 @@ copyBtn.onclick = async () => {
   }
 };
 
-/* START CAMERA */
 async function startScanner() {
 
   cameras = await Html5Qrcode.getCameras();
@@ -126,7 +123,6 @@ async function startScanner() {
     decoded => showPopup(decoded)
   );
 
-  /* 🔥 ALWAYS SHOW TORCH BUTTON */
   if (torchBtn) {
     torchBtn.style.display = "inline-block";
   }
@@ -134,15 +130,12 @@ async function startScanner() {
 
 startScanner();
 
-/* 🔦 TORCH TOGGLE (SMART HANDLING) */
 if (torchBtn) {
   torchBtn.onclick = async () => {
-
     if (!qrScanner) return;
 
     try {
       const track = qrScanner.getRunningTrack();
-
       torchOn = !torchOn;
 
       await track.applyConstraints({
@@ -152,8 +145,6 @@ if (torchBtn) {
       torchBtn.innerHTML = torchOn ? "💡 On" : "🔦 Torch";
 
     } catch (err) {
-
-      /* 🔥 FAIL GRACEFULLY */
       torchBtn.innerHTML ="⚠️ Limited support";
 
       setTimeout(() => {
@@ -165,14 +156,12 @@ if (torchBtn) {
   };
 }
 
-/* FLIP CAMERA */
 flipBtn.onclick = async () => {
 
   if (!qrScanner || !cameras.length) return;
 
   await qrScanner.stop();
 
-  /* RESET TORCH UI */
   torchOn = false;
   if (torchBtn) torchBtn.innerHTML = "🔦 Torch";
 
@@ -185,7 +174,6 @@ flipBtn.onclick = async () => {
   );
 };
 
-/* UPLOAD IMAGE */
 uploadBtn.onclick = () => fileInput.click();
 
 fileInput.onchange = async (e) => {
@@ -207,8 +195,9 @@ fileInput.onchange = async (e) => {
 
 }
 
+
 /* ==================================================
-   ⚡ GENERATOR
+   ⚡ TEXT GENERATOR
 ================================================== */
 if (isGeneratorPage) {
 
@@ -228,25 +217,13 @@ function generateTextQR() {
     return;
   }
 
-  outputBox.innerHTML = ""; // IMPORTANT
-
-  QRCode.toCanvas(text, { width: 240 }, (err, canvas) => {
-
-    if (err) {
-      outputBox.innerHTML = `<p>Error generating QR</p>`;
-      return;
-    }
-
+  renderQR(text, outputBox, downloadBtn, (canvas) => {
     qrCanvas = canvas;
-    outputBox.appendChild(canvas);
-    downloadBtn.disabled = false;
   });
 }
 
-/* 🔥 AUTO GENERATE */
 input.addEventListener("input", generateTextQR);
 
-/* DOWNLOAD */
 downloadBtn.onclick = () => {
   if (!qrCanvas) return;
 
@@ -267,7 +244,6 @@ if (isWhatsappPage) {
 const phone = document.getElementById("phone");
 const message = document.getElementById("message");
 
-const generateBtn = document.getElementById("generate-btn");
 const downloadBtn = document.getElementById("download-btn");
 const outputBox = document.getElementById("qr-output");
 
@@ -280,6 +256,7 @@ function generateWhatsAppQR() {
 
   if (!number) {
     outputBox.innerHTML = "<p class='qr-placeholder'>Enter phone number</p>";
+    downloadBtn.disabled = true;
     return;
   }
 
@@ -287,6 +264,7 @@ function generateWhatsAppQR() {
 
   if (number.length < 10) {
     outputBox.innerHTML = "<p class='qr-placeholder'>Invalid number</p>";
+    downloadBtn.disabled = true;
     return;
   }
 
@@ -301,7 +279,6 @@ function generateWhatsAppQR() {
   });
 }
 
-generateBtn.onclick = generateWhatsAppQR;
 phone.addEventListener("input", generateWhatsAppQR);
 message.addEventListener("input", generateWhatsAppQR);
 
@@ -310,6 +287,62 @@ downloadBtn.onclick = () => {
 
   const link = document.createElement("a");
   link.download = "whatsapp_qr.png";
+  link.href = qrCanvas.toDataURL("image/png");
+  link.click();
+};
+
+}
+
+
+/* ==================================================
+   💰 UPI GENERATOR
+================================================== */
+if (isUpiPage) {
+
+const upi = document.getElementById("upi");
+const name = document.getElementById("name");
+const amount = document.getElementById("amount");
+const note = document.getElementById("note");
+
+const downloadBtn = document.getElementById("download-btn");
+const outputBox = document.getElementById("qr-output");
+
+let qrCanvas = null;
+
+function generateUpiQR() {
+
+  const pa = upi.value.trim();
+  const pn = name.value.trim();
+  const am = amount.value.trim();
+  const tn = note.value.trim();
+
+  if (!pa) {
+    outputBox.innerHTML = "<p class='qr-placeholder'>Enter UPI ID</p>";
+    downloadBtn.disabled = true;
+    return;
+  }
+
+  let upiUrl = `upi://pay?pa=${pa}`;
+
+  if (pn) upiUrl += `&pn=${encodeURIComponent(pn)}`;
+  if (am) upiUrl += `&am=${am}`;
+  if (tn) upiUrl += `&tn=${encodeURIComponent(tn)}`;
+
+  renderQR(upiUrl, outputBox, downloadBtn, (canvas) => {
+    qrCanvas = canvas;
+  });
+}
+
+upi.addEventListener("input", generateUpiQR);
+name.addEventListener("input", generateUpiQR);
+amount.addEventListener("input", generateUpiQR);
+note.addEventListener("input", generateUpiQR);
+
+downloadBtn.onclick = () => {
+  if (!qrCanvas) return;
+
+  const link = document.createElement("a");
+  link.download = "upi_qr.png";
   link.href = qrCanvas.toDataURL("image/png");
   link.click();
 };
