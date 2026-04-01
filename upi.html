@@ -53,7 +53,7 @@
   <label class="label" style="margin-top:12px;">Note (optional)</label>
   <input id="note" class="textarea" placeholder="Payment note" />
 
-  <!-- BUTTONS -->
+  <!-- BUTTON -->
   <div class="generator-controls">
     <button id="download-btn" disabled>Download</button>
   </div>
@@ -69,70 +69,11 @@
 
 <footer class="footer"></footer>
 
+<!-- QR LIBRARY (REQUIRED) -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
-<script>
-
-const upi = document.getElementById("upi");
-const name = document.getElementById("name");
-const amount = document.getElementById("amount");
-const note = document.getElementById("note");
-
-const generateBtn = document.getElementById("generate-btn");
-const downloadBtn = document.getElementById("download-btn");
-const outputBox = document.getElementById("qr-output");
-
-let qrCanvas = null;
-
-function generateQR() {
-  const pa = upi.value.trim();
-  const pn = name.value.trim();
-  const am = amount.value.trim();
-  const tn = note.value.trim();
-
-  if (!pa) {
-    outputBox.innerHTML = "<p class='qr-placeholder'>Enter UPI ID</p>";
-    return;
-  }
-
-  let upiUrl = `upi://pay?pa=${pa}`;
-
-  if (pn) upiUrl += `&pn=${encodeURIComponent(pn)}`;
-  if (am) upiUrl += `&am=${am}`;
-  if (tn) upiUrl += `&tn=${encodeURIComponent(tn)}`;
-
-  outputBox.innerHTML = "";
-
-  QRCode.toCanvas(upiUrl, { width: 240 }, (err, canvas) => {
-    if (err) {
-      outputBox.innerHTML = "<p>Error generating QR</p>";
-      return;
-    }
-
-    qrCanvas = canvas;
-    outputBox.appendChild(canvas);
-    downloadBtn.disabled = false;
-  });
-}
-
-generateBtn.onclick = generateQR;
-
-/* 🔥 AUTO GENERATE */
-upi.addEventListener("input", generateQR);
-name.addEventListener("input", generateQR);
-amount.addEventListener("input", generateQR);
-note.addEventListener("input", generateQR);
-
-downloadBtn.onclick = () => {
-  if (!qrCanvas) return;
-
-  const link = document.createElement("a");
-  link.download = "upi_qr.png";
-  link.href = qrCanvas.toDataURL("image/png");
-  link.click();
-};
-
-</script>
+<!-- MAIN SCRIPT -->
+<script src="/assets/js/script.js"></script>
 
 </body>
 </html>
