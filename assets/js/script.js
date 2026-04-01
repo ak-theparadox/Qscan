@@ -213,23 +213,40 @@ fileInput.onchange = async (e) => {
 if (isGeneratorPage) {
 
 const input = document.getElementById("qr-text");
-const generateBtn = document.getElementById("generate-btn");
 const downloadBtn = document.getElementById("download-btn");
 const outputBox = document.getElementById("qr-output");
 
 let qrCanvas = null;
 
 function generateTextQR() {
+
   const text = input.value.trim();
 
-  renderQR(text, outputBox, downloadBtn, (canvas) => {
+  if (!text) {
+    outputBox.innerHTML = `<p class="qr-placeholder">Your QR will appear here</p>`;
+    downloadBtn.disabled = true;
+    return;
+  }
+
+  outputBox.innerHTML = ""; // IMPORTANT
+
+  QRCode.toCanvas(text, { width: 240 }, (err, canvas) => {
+
+    if (err) {
+      outputBox.innerHTML = `<p>Error generating QR</p>`;
+      return;
+    }
+
     qrCanvas = canvas;
+    outputBox.appendChild(canvas);
+    downloadBtn.disabled = false;
   });
 }
 
-generateBtn.onclick = generateTextQR;
+/* 🔥 AUTO GENERATE */
 input.addEventListener("input", generateTextQR);
 
+/* DOWNLOAD */
 downloadBtn.onclick = () => {
   if (!qrCanvas) return;
 
