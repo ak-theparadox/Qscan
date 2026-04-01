@@ -7,7 +7,6 @@
 
 <meta charset="UTF-8" />
 <title>WhatsApp QR Generator - Qscan</title>
-<meta name="description" content="Generate WhatsApp QR code instantly. Start chat without saving number.">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <link rel="stylesheet" href="/assets/css/style.css" />
@@ -31,29 +30,24 @@
 <main class="main">
 
 <section class="hero">
-  <h1>WhatsApp QR Generator</h1>
+  <h1>WhatsApp QR</h1>
   <p class="hero-sub">Start chat without saving number</p>
 </section>
 
 <section class="generator-card">
 
-  <!-- PHONE -->
   <label class="label">Phone Number</label>
-  <input id="phone" class="textarea" placeholder="e.g. 919876543210" />
+  <input id="phone" class="textarea" placeholder="Enter phone number" />
 
-  <!-- MESSAGE -->
   <label class="label" style="margin-top:12px;">Message (optional)</label>
-  <input id="message" class="textarea" placeholder="Type your message..." />
+  <input id="message" class="textarea" placeholder="Hello..." />
 
-  <!-- BUTTONS -->
   <div class="generator-controls">
-    <button id="generate-btn" class="btn primary">Generate</button>
-    <button id="download-btn" class="btn small" disabled>Download</button>
+    <button id="download-btn" disabled>Download</button>
   </div>
 
-  <!-- OUTPUT -->
   <div id="qr-output" class="qr-output">
-    <p class="qr-placeholder small">Your WhatsApp QR will appear here</p>
+    <p class="qr-placeholder">Your QR will appear here</p>
   </div>
 
 </section>
