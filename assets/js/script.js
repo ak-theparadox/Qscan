@@ -5,7 +5,7 @@ const isScannerPage = document.getElementById("preview") !== null;
 const isGeneratorPage = document.getElementById("qr-text") !== null;
 const isWhatsappPage = document.getElementById("phone") !== null;
 const isUpiPage = document.getElementById("upi") !== null;
-
+const isWifiPage = document.getElementById("ssid") !== null;
 
 /* ==================================================
    🔥 COMMON QR RENDER FUNCTION
@@ -348,5 +348,61 @@ downloadBtn.onclick = () => {
 };
 
 }
+/* ==================================================
+   📶 WIFI GENERATOR
+================================================== */
+const isWifiPage = document.getElementById("ssid") !== null;
 
+if (isWifiPage) {
+
+const ssid = document.getElementById("ssid");
+const password = document.getElementById("password");
+const security = document.getElementById("security");
+
+const downloadBtn = document.getElementById("download-btn");
+const outputBox = document.getElementById("qr-output");
+
+let qrCanvas = null;
+
+function generateWifiQR() {
+
+  const s = ssid.value.trim();
+  const p = password.value.trim();
+  const t = security.value;
+
+  if (!s) {
+    outputBox.innerHTML = "<p class='qr-placeholder'>Enter WiFi name</p>";
+    downloadBtn.disabled = true;
+    return;
+  }
+
+  let wifiString = `WIFI:T:${t};S:${s};`;
+
+  if (t !== "nopass") {
+    wifiString += `P:${p};`;
+  }
+
+  wifiString += ";";
+
+  renderQR(wifiString, outputBox, downloadBtn, (canvas) => {
+    qrCanvas = canvas;
+  });
+}
+
+/* 🔥 AUTO GENERATE */
+ssid.addEventListener("input", generateWifiQR);
+password.addEventListener("input", generateWifiQR);
+security.addEventListener("change", generateWifiQR);
+
+/* DOWNLOAD */
+downloadBtn.onclick = () => {
+  if (!qrCanvas) return;
+
+  const link = document.createElement("a");
+  link.download = "wifi_qr.png";
+  link.href = qrCanvas.toDataURL("image/png");
+  link.click();
+};
+
+}
 });
