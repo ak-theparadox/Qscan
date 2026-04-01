@@ -351,7 +351,6 @@ downloadBtn.onclick = () => {
 /* ==================================================
    📶 WIFI GENERATOR
 ================================================== */
-const isWifiPage = document.getElementById("ssid") !== null;
 
 if (isWifiPage) {
 
