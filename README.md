@@ -10,7 +10,7 @@ Scan, generate, and share QR codes instantly — with zero data upload.
 
 - 🔍 Scanner — real-time camera scan + image upload
 - ⚡ Generator — create QR codes for text & URLs
-- 🧰 Tools — WiFi, UPI, WhatsApp & more (expanding)
+- 🧰 Tools — WiFi,WhatsApp,UPI & more
 - 🔒 Privacy-first — everything runs locally
 - 📱 PWA-ready — installable & works offline
 
@@ -25,7 +25,7 @@ html5-qrcode • qrcode.js
 
 🎯 Vision
 
-To build a complete, mobile-first QR toolkit — optimized for real-world use, especially in India.
+To build clean,complete, mobile-first QR toolkit.
 
 ---
 
