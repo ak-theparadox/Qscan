@@ -344,6 +344,7 @@ body {
 .tool-title {
   font-weight: 600;
   font-size: 1.05rem;
+  color: #fff;
 }
 
 .tool-desc {
