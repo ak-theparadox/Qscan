@@ -1,3138 +1,1275 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-/* ==================================================
-   PAGE DETECTION
-================================================== */
+  /* ==================================================
+     PAGE DETECTION
+  ================================================== */
 
-const isScannerPage =
-  document.getElementById("preview") !== null;
+  const isScannerPage =
+    document.getElementById("preview") !== null;
 
-const isGeneratorPage =
-  document.getElementById("qr-text") !== null;
+  const isGeneratorPage =
+    document.getElementById("qr-text") !== null;
 
-const isWhatsappPage =
-  document.getElementById("phone") !== null;
+  const isWhatsappPage =
+    document.getElementById("phone") !== null;
 
-const isUpiPage =
-  document.getElementById("upi") !== null;
+  const isUpiPage =
+    document.getElementById("upi") !== null;
 
-const isWifiPage =
-  document.getElementById("ssid") !== null;
+  const isWifiPage =
+    document.getElementById("ssid") !== null;
 
 
-/* ==================================================
-   COMMON QR RENDER FUNCTION
-================================================== */
+  /* ==================================================
+     COMMON QR RENDER FUNCTION
+  ================================================== */
 
-function renderQR(text, outputBox, downloadBtn, setCanvas) {
+  function renderQR(text, outputBox, downloadBtn, setCanvas) {
 
-  if (!text) {
+    if (!text) {
+      outputBox.innerHTML =
+        `<p class="qr-placeholder">Enter text first</p>`;
 
-    outputBox.innerHTML =
-      `<p class="qr-placeholder">Enter text first</p>`;
+      downloadBtn.disabled = true;
+      return;
+    }
 
+    if (typeof QRCode === "undefined") {
+      console.error("Qscan: QRCode library not loaded.");
+
+      outputBox.innerHTML =
+        `<p class="qr-placeholder">QR generator unavailable</p>`;
+
+      downloadBtn.disabled = true;
+      return;
+    }
+
+    outputBox.innerHTML = "";
     downloadBtn.disabled = true;
 
-    return;
-  }
-
-  outputBox.innerHTML = "";
-
-  QRCode.toCanvas(
-    text,
-    { width: 240 },
-    (err, canvas) => {
-
-      if (err) {
-
-        outputBox.innerHTML =
-          `<p>Error generating QR</p>`;
-
-        downloadBtn.disabled = true;
-
-        return;
-      }
-
-      setCanvas(canvas);
-
-      outputBox.appendChild(canvas);
-
-      downloadBtn.disabled = false;
-
-    }
-  );
-}
-
-
-/* ==================================================
-   SCANNER
-================================================== */
-
-if (isScannerPage) {
-
-  const previewId = "preview";
-
-  const flipBtn =
-    document.getElementById("flip-btn");
-
-  const uploadBtn =
-    document.getElementById("upload-btn");
-
-  const fileInput =
-    document.getElementById("file-input");
-
-  const torchBtn =
-    document.getElementById("torch-btn");
-
-  const popup =
-    document.getElementById("result-popup");
-
-  const closePopupBtn =
-    document.getElementById("close-popup");
-
-  const resultText =
-    document.getElementById("result-text");
-
-  const copyBtn =
-    document.getElementById("copy-btn");
-
-
-  let qrScanner = null;
-
-  let cameras = [];
-
-  let currentCam = 0;
-
-  let torchOn = false;
-
-
-/* ==================================================
-   URL DETECTION
-================================================== */
-
-  function isURL(text) {
-
-    return /^https?:\/\//i.test(text);
-
-  }
-
-
-/* ==================================================
-   SHOW RESULT
-================================================== */
-
-  function showPopup(text) {
-
-    if (navigator.vibrate) {
-      navigator.vibrate(120);
-    }
-
-
-    /*
-     * Safely display scanned result.
-     */
-
-    resultText.innerHTML = "";
-
-
-    if (isURL(text)) {
-
-      const link =
-        document.createElement("a");
-
-      link.href = text;
-
-      link.target = "_blank";
-
-      link.rel =
-        "noopener noreferrer";
-
-      link.textContent = text;
-
-      resultText.appendChild(link);
-
-    } else {
-
-      resultText.textContent = text;
-
-    }
-
-
-    copyBtn.disabled = false;
-
-    copyBtn.innerHTML = "Copy";
-
-    copyBtn.style.background = "";
-
-    popup.classList.remove("hidden");
-
-  }
-
-
-/* ==================================================
-   CLOSE RESULT
-================================================== */
-
-  if (closePopupBtn) {
-
-    closePopupBtn.onclick = () => {
-
-      popup.classList.add("hidden");
-
-    };
-
-  }
-
-
-/* ==================================================
-   COPY RESULT
-================================================== */
-
-  if (copyBtn) {
-
-    copyBtn.onclick = async () => {
-
-      const text =
-        resultText.textContent;
-
-
-      try {
-
-        await navigator.clipboard.writeText(text);
-
-        copyBtn.innerHTML =
-          "✓ Copied";
-
-        copyBtn.style.background =
-          "#28c76f";
-
-
-        if (navigator.vibrate) {
-          navigator.vibrate(40);
+    QRCode.toCanvas(
+      text,
+      {
+        width: 240,
+        margin: 2
+      },
+      (err, canvas) => {
+
+        if (err) {
+          console.error("Qscan: QR generation failed:", err);
+
+          outputBox.innerHTML =
+            `<p class="qr-placeholder">Error generating QR</p>`;
+
+          downloadBtn.disabled = true;
+          return;
         }
 
+        setCanvas(canvas);
 
-        setTimeout(() => {
+        outputBox.appendChild(canvas);
 
-          copyBtn.innerHTML =
-            "Copy";
-
-          copyBtn.style.background =
-            "";
-
-        }, 2000);
-
-
-      } catch (err) {
-
-        console.error(
-          "Qscan: Copy failed:",
-          err
-        );
-
+        downloadBtn.disabled = false;
       }
-
-    };
-
+    );
   }
 
 
-/* ==================================================
-   🎯 CAMERA AUTOFOCUS
-================================================== */
+  /* ==================================================
+     SCANNER
+  ================================================== */
 
-  async function applyCameraFocus() {
+  if (isScannerPage) {
 
-    if (!qrScanner) return;
+    const previewId = "preview";
+
+    const flipBtn =
+      document.getElementById("flip-btn");
+
+    const uploadBtn =
+      document.getElementById("upload-btn");
+
+    const fileInput =
+      document.getElementById("file-input");
+
+    const torchBtn =
+      document.getElementById("torch-btn");
+
+    const popup =
+      document.getElementById("result-popup");
+
+    const closePopupBtn =
+      document.getElementById("close-popup");
+
+    const resultText =
+      document.getElementById("result-text");
+
+    const copyBtn =
+      document.getElementById("copy-btn");
 
 
-    try {
+    let qrScanner = null;
+    let cameras = [];
+    let currentCam = 0;
+    let torchOn = false;
 
-      const track =
-        qrScanner.getRunningTrack();
+
+    /* ==================================================
+       URL DETECTION
+    ================================================== */
+
+    function isURL(text) {
+      return /^https?:\/\//i.test(text);
+    }
 
 
-      if (!track || !track.applyConstraints) {
-        return;
+    /* ==================================================
+       SHOW RESULT
+    ================================================== */
+
+    function showPopup(text) {
+
+      if (!popup || !resultText) return;
+
+      if (navigator.vibrate) {
+        navigator.vibrate(120);
       }
 
+      resultText.innerHTML = "";
 
-      const capabilities =
-        track.getCapabilities
-          ? track.getCapabilities()
-          : {};
+      if (isURL(text)) {
 
+        const link =
+          document.createElement("a");
 
-      /*
-       * Use continuous autofocus when
-       * supported by the camera.
-       */
+        link.href = text;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = text;
 
-      if (
-        capabilities.focusMode &&
-        capabilities.focusMode.includes("continuous")
-      ) {
-
-        await track.applyConstraints({
-
-          advanced: [
-            {
-              focusMode: "continuous"
-            }
-          ]
-
-        });
-
-
-        console.log(
-          "Qscan: Continuous autofocus enabled"
-        );
+        resultText.appendChild(link);
 
       } else {
 
-        console.log(
-          "Qscan: Continuous autofocus not supported"
-        );
-
+        resultText.textContent = text;
       }
 
-    } catch (err) {
+      if (copyBtn) {
+        copyBtn.disabled = false;
+        copyBtn.innerHTML = "Copy";
+        copyBtn.style.background = "";
+      }
 
-      console.log(
-        "Qscan: Autofocus unavailable:",
-        err
-      );
+      popup.classList.remove("hidden");
+    }
+
+
+    /* ==================================================
+       CLOSE RESULT
+    ================================================== */
+
+    if (closePopupBtn) {
+
+      closePopupBtn.onclick = () => {
+        popup.classList.add("hidden");
+      };
 
     }
 
-  }
 
+    /* ==================================================
+       COPY RESULT
+    ================================================== */
 
-/* ==================================================
-   📷 START SCANNER
-================================================== */
+    if (copyBtn) {
 
-  async function startScanner(cameraIndex = null) {
+      copyBtn.onclick = async () => {
 
-    try {
+        const text =
+          resultText.textContent;
 
+        try {
 
-      /*
-       * Get available cameras only once.
-       */
+          await navigator.clipboard.writeText(text);
 
-      if (!cameras.length) {
+          copyBtn.innerHTML = "✓ Copied";
+          copyBtn.style.background = "#28c76f";
 
-        cameras =
-          await Html5Qrcode.getCameras();
-
-      }
-
-
-      if (!cameras.length) {
-
-        alert("No camera detected.");
-
-        return;
-
-      }
-
-
-/* ----------------------------------------------
-   SELECT CAMERA
----------------------------------------------- */
-
-      if (cameraIndex !== null) {
-
-        currentCam =
-          cameraIndex;
-
-      } else {
-
-        /*
-         * Prefer rear camera.
-         */
-
-        let backCamIndex =
-          cameras.findIndex(cam => {
-
-            const label =
-              (cam.label || "").toLowerCase();
-
-            return (
-              label.includes("back") ||
-              label.includes("rear") ||
-              label.includes("environment")
-            );
-
-          });
-
-
-        /*
-         * If labels are unavailable,
-         * use the last camera.
-         */
-
-        if (backCamIndex === -1) {
-
-          backCamIndex =
-            cameras.length - 1;
-
-        }
-
-
-        currentCam =
-          backCamIndex;
-
-      }
-
-
-/* ----------------------------------------------
-   CREATE SCANNER
----------------------------------------------- */
-
-      qrScanner =
-        new Html5Qrcode(previewId);
-
-
-/* ----------------------------------------------
-   START CAMERA
----------------------------------------------- */
-
-      await qrScanner.start(
-
-        {
-          deviceId: {
-            exact:
-              cameras[currentCam].id
+          if (navigator.vibrate) {
+            navigator.vibrate(40);
           }
-        },
 
-        {
+          setTimeout(() => {
 
-          fps: 15,
+            copyBtn.innerHTML = "Copy";
+            copyBtn.style.background = "";
 
-          qrbox: {
-            width: 260,
-            height: 260
-          },
+          }, 2000);
 
-          aspectRatio: 1.777778
+        } catch (err) {
 
-        },
-
-        decoded => {
-
-          showPopup(decoded);
+          console.error(
+            "Qscan: Copy failed:",
+            err
+          );
 
         }
 
-      );
-
-
-/* ----------------------------------------------
-   AUTOFOCUS
----------------------------------------------- */
-
-      await applyCameraFocus();
-
-
-/* ----------------------------------------------
-   TORCH BUTTON
----------------------------------------------- */
-
-      if (torchBtn) {
-
-        torchBtn.style.display =
-          "inline-block";
-
-      }
-
-
-      console.log(
-        "Qscan: Camera started"
-      );
-
-
-    } catch (err) {
-
-      console.error(
-        "Qscan: Camera error:",
-        err
-      );
-
-      alert(
-        "Unable to start camera. Please allow camera permission and try again."
-      );
+      };
 
     }
 
-  }
 
+    /* ==================================================
+       CAMERA AUTOFOCUS
+    ================================================== */
 
-/* ==================================================
-   🚀 START CAMERA
-================================================== */
+    async function applyCameraFocus() {
 
-  startScanner();
-
-
-/* ==================================================
-   🔦 TORCH
-================================================== */
-
-  if (torchBtn) {
-
-    torchBtn.onclick = async () => {
-
-      if (!qrScanner) {
-        return;
-      }
-
+      if (!qrScanner) return;
 
       try {
-
-        /*
-         * Get the actual running camera track.
-         */
 
         const track =
           qrScanner.getRunningTrack();
 
-
-        if (!track) {
-
-          console.log(
-            "Qscan: No active camera track"
-          );
-
+        if (!track || !track.applyConstraints) {
           return;
-
         }
-
-
-        /*
-         * Check torch support.
-         */
 
         const capabilities =
           track.getCapabilities
             ? track.getCapabilities()
             : {};
 
+        if (
+          capabilities.focusMode &&
+          capabilities.focusMode.includes("continuous")
+        ) {
 
-        if (!capabilities.torch) {
+          await track.applyConstraints({
+            advanced: [
+              {
+                focusMode: "continuous"
+              }
+            ]
+          });
+
+          console.log(
+            "Qscan: Continuous autofocus enabled"
+          );
+
+        } else {
+
+          console.log(
+            "Qscan: Continuous autofocus not supported"
+          );
+
+        }
+
+      } catch (err) {
+
+        console.log(
+          "Qscan: Autofocus unavailable:",
+          err
+        );
+
+      }
+
+    }
+
+
+    /* ==================================================
+       START CAMERA
+    ================================================== */
+
+    async function startScanner(cameraIndex = null) {
+
+      try {
+
+        if (
+          typeof Html5Qrcode === "undefined"
+        ) {
+
+          console.error(
+            "Qscan: html5-qrcode library not loaded."
+          );
+
+          alert(
+            "Scanner library could not be loaded."
+          );
+
+          return;
+        }
+
+
+        /* Get cameras only once */
+
+        if (!cameras.length) {
+
+          cameras =
+            await Html5Qrcode.getCameras();
+
+        }
+
+
+        if (!cameras.length) {
+
+          alert("No camera detected.");
+          return;
+
+        }
+
+
+        /* Select camera */
+
+        if (cameraIndex !== null) {
+
+          currentCam = cameraIndex;
+
+        } else {
+
+          let backCamIndex =
+            cameras.findIndex(cam => {
+
+              const label =
+                (cam.label || "").toLowerCase();
+
+              return (
+                label.includes("back") ||
+                label.includes("rear") ||
+                label.includes("environment")
+              );
+
+            });
+
+
+          if (backCamIndex === -1) {
+            backCamIndex =
+              cameras.length - 1;
+          }
+
+
+          currentCam =
+            backCamIndex;
+
+        }
+
+
+        /* Create scanner */
+
+        if (!qrScanner) {
+
+          qrScanner =
+            new Html5Qrcode(previewId);
+
+        }
+
+
+        /* Start camera */
+
+        await qrScanner.start(
+
+          {
+            deviceId: {
+              exact:
+                cameras[currentCam].id
+            }
+          },
+
+          {
+            fps: 15,
+
+            qrbox: {
+              width: 260,
+              height: 260
+            },
+
+            aspectRatio: 1.777778
+          },
+
+          decodedText => {
+
+            showPopup(decodedText);
+
+          },
+
+          errorMessage => {
+            /* Ignore normal scan errors */
+          }
+
+        );
+
+
+        /* Autofocus */
+
+        await applyCameraFocus();
+
+
+        /* Torch button */
+
+        if (torchBtn) {
+
+          torchBtn.style.display =
+            "inline-block";
+
+        }
+
+
+        console.log(
+          "Qscan: Camera started"
+        );
+
+      } catch (err) {
+
+        console.error(
+          "Qscan: Camera error:",
+          err
+        );
+
+        alert(
+          "Unable to start camera. Please allow camera permission and try again."
+        );
+
+      }
+
+    }
+
+
+    /* ==================================================
+       START CAMERA
+    ================================================== */
+
+    startScanner();
+
+
+    /* ==================================================
+       TORCH
+    ================================================== */
+
+    if (torchBtn) {
+
+      torchBtn.onclick = async () => {
+
+        if (!qrScanner) return;
+
+        try {
+
+          const track =
+            qrScanner.getRunningTrack();
+
+          if (!track) {
+            return;
+          }
+
+
+          const capabilities =
+            track.getCapabilities
+              ? track.getCapabilities()
+              : {};
+
+
+          if (!capabilities.torch) {
+
+            torchBtn.innerHTML =
+              "⚠️ Not supported";
+
+            torchOn = false;
+
+            setTimeout(() => {
+
+              torchBtn.innerHTML =
+                "🔦 Torch";
+
+            }, 1500);
+
+            return;
+          }
+
+
+          const newTorchState =
+            !torchOn;
+
+
+          await track.applyConstraints({
+
+            advanced: [
+              {
+                torch:
+                  newTorchState
+              }
+            ]
+
+          });
+
+
+          torchOn =
+            newTorchState;
+
 
           torchBtn.innerHTML =
-            "⚠️ Not supported";
+            torchOn
+              ? "💡 On"
+              : "🔦 Torch";
 
+
+        } catch (err) {
+
+          console.error(
+            "Qscan: Torch error:",
+            err
+          );
+
+          torchOn = false;
+
+          torchBtn.innerHTML =
+            "⚠️ Limited support";
 
           setTimeout(() => {
 
             torchBtn.innerHTML =
               "🔦 Torch";
 
-          }, 1500);
+          }, 1800);
+
+        }
+
+      };
+
+    }
+
+
+    /* ==================================================
+       SWITCH CAMERA
+    ================================================== */
+
+    if (flipBtn) {
+
+      flipBtn.onclick = async () => {
+
+        if (
+          !qrScanner ||
+          !cameras.length
+        ) {
+          return;
+        }
+
+
+        try {
+
+          /* Turn torch off */
+
+          if (torchOn) {
+
+            try {
+
+              const track =
+                qrScanner.getRunningTrack();
+
+              if (
+                track &&
+                track.applyConstraints
+              ) {
+
+                await track.applyConstraints({
+
+                  advanced: [
+                    {
+                      torch: false
+                    }
+                  ]
+
+                });
+
+              }
+
+            } catch (err) {
+
+              console.log(
+                "Qscan: Could not turn torch off:",
+                err
+              );
+
+            }
+
+          }
 
 
           torchOn = false;
 
-          console.log(
-            "Qscan: Torch not supported"
-          );
 
-          return;
+          if (torchBtn) {
 
-        }
+            torchBtn.innerHTML =
+              "🔦 Torch";
 
-
-        /*
-         * Toggle torch.
-         */
-
-        const newTorchState =
-          !torchOn;
+          }
 
 
-        await track.applyConstraints({
+          /* Stop current camera */
 
-          advanced: [
+          await qrScanner.stop();
+
+
+          /* Next camera */
+
+          currentCam =
+            (currentCam + 1) %
+            cameras.length;
+
+
+          /* Start next camera */
+
+          await qrScanner.start(
+
             {
-              torch:
-                newTorchState
-            }
-          ]
-
-        });
-
-
-        /*
-         * Only update state after
-         * applyConstraints succeeds.
-         */
-
-        torchOn =
-          newTorchState;
-
-
-        torchBtn.innerHTML =
-          torchOn
-            ? "💡 On"
-            : "🔦 Torch";
-
-
-        console.log(
-          "Qscan: Torch",
-          torchOn ? "ON" : "OFF"
-        );
-
-
-      } catch (err) {
-
-        console.error(
-          "Qscan: Torch error:",
-          err
-        );
-
-
-        torchOn = false;
-
-
-        torchBtn.innerHTML =
-          "⚠️ Limited support";
-
-
-        setTimeout(() => {
-
-          torchBtn.innerHTML =
-            "🔦 Torch";
-
-        }, 1500);
-
-      }
-
-    };
-
-  }
-
-
-/* ==================================================
-   🔄 SWITCH CAMERA
-================================================== */
-
-  if (flipBtn) {
-
-    flipBtn.onclick = async () => {
-
-      if (
-        !qrScanner ||
-        !cameras.length
-      ) {
-
-        return;
-
-      }
-
-
-      try {
-
-        /*
-         * Turn torch off first.
-         */
-
-        if (torchOn) {
-
-          try {
-
-            const track =
-              qrScanner.getRunningTrack();
-
-
-            if (track) {
-
-              await track.applyConstraints({
-
-                advanced: [
-                  {
-                    torch: false
-                  }
-                ]
-
-              });
-
-            }
-
-          } catch (err) {
-
-            console.log(
-              "Qscan: Could not turn torch off:",
-              err
-            );
-
-          }
-
-        }
-
-
-        torchOn = false;
-
-
-        if (torchBtn) {
-
-          torchBtn.innerHTML =
-            "🔦 Torch";
-
-        }
-
-
-        /*
-         * Stop current camera.
-         */
-
-        await qrScanner.stop();
-
-
-        /*
-         * Move to next camera.
-         */
-
-        currentCam =
-          (currentCam + 1) %
-          cameras.length;
-
-
-        /*
-         * Start new camera.
-         */
-
-        await qrScanner.start(
-
-          {
-            deviceId: {
-              exact:
-                cameras[currentCam].id
-            }
-          },
-
-          {
-
-            fps: 15,
-
-            qrbox: {
-              width: 260,
-              height: 260
+              deviceId: {
+                exact:
+                  cameras[currentCam].id
+              }
             },
 
-            aspectRatio: 1.777778
+            {
+              fps: 15,
 
-          },
+              qrbox: {
+                width: 260,
+                height: 260
+              },
 
-          decoded => {
+              aspectRatio: 1.777778
+            },
 
-            showPopup(decoded);
+            decodedText => {
 
-          }
+              showPopup(decodedText);
 
-        );
+            },
 
+            errorMessage => {
+              /* Ignore normal scan errors */
+            }
 
-        /*
-         * Apply autofocus again.
-         */
-
-        await applyCameraFocus();
-
-
-      } catch (err) {
-
-        console.error(
-          "Qscan: Camera switch failed:",
-          err
-        );
-
-      }
-
-    };
-
-  }
-
-
-/* ==================================================
-   🖼️ UPLOAD QR IMAGE
-================================================== */
-
-  if (uploadBtn && fileInput) {
-
-    uploadBtn.onclick = () => {
-
-      fileInput.click();
-
-    };
-
-
-    fileInput.onchange =
-      async (e) => {
-
-        const file =
-          e.target.files[0];
-
-
-        if (!file) return;
-
-
-        /*
-         * Create temporary scanner
-         * dynamically.
-         *
-         * No preview-temp is required
-         * in index.html.
-         */
-
-        const tempId =
-          "qscan-temp-scanner";
-
-
-        const tempElement =
-          document.createElement("div");
-
-
-        tempElement.id =
-          tempId;
-
-
-        tempElement.style.display =
-          "none";
-
-
-        document.body.appendChild(
-          tempElement
-        );
-
-
-        const html5Temp =
-          new Html5Qrcode(tempId);
-
-
-        try {
-
-          const result =
-            await html5Temp.scanFile(
-              file,
-              false
-            );
-
-
-          showPopup(result);
-
-
-        } catch (err) {
-
-          console.log(
-            "Qscan: Image scan failed:",
-            err
           );
 
 
-          showPopup(
-            "Invalid QR / Barcode"
+          /* Autofocus again */
+
+          await applyCameraFocus();
+
+
+          console.log(
+            "Qscan: Camera switched"
           );
-
-        }
-
-
-        /*
-         * Clean up.
-         */
-
-        try {
-
-          html5Temp.clear();
 
         } catch (err) {
 
-          console.log(
-            "Qscan: Temporary scanner cleanup:",
+          console.error(
+            "Qscan: Camera switch failed:",
             err
           );
 
         }
-
-
-        tempElement.remove();
-
-
-        /*
-         * Allow selecting the same
-         * image again.
-         */
-
-        fileInput.value = "";
 
       };
 
-  }
-
-}
-
-
-/* ==================================================
-   ⚡ TEXT QR GENERATOR
-================================================== */
-
-if (isGeneratorPage) {
-
-  const input =
-    document.getElementById("qr-text");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateTextQR() {
-
-    const text =
-      input.value.trim();
-
-
-    if (!text) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Your QR will appear here
-        </p>`;
-
-      downloadBtn.disabled = true;
-
-      qrCanvas = null;
-
-      return;
-
     }
 
 
-    renderQR(
-      text,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  input.addEventListener(
-    "input",
-    generateTextQR
-  );
-
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "qscan_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-
-/* ==================================================
-   💬 WHATSAPP QR GENERATOR
-================================================== */
-
-if (isWhatsappPage) {
-
-  const phone =
-    document.getElementById("phone");
-
-  const message =
-    document.getElementById("message");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateWhatsAppQR() {
-
-    let number =
-      phone.value.trim();
-
-    const msg =
-      message.value.trim();
-
-
-    if (!number) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Enter phone number
-        </p>`;
-
-      downloadBtn.disabled = true;
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    number =
-      number.replace(
-        /\D/g,
-        ""
-      );
-
-
-    if (number.length < 10) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Invalid number
-        </p>`;
-
-      downloadBtn.disabled = true;
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    let waUrl =
-      `https://wa.me/${number}`;
-
-
-    if (msg) {
-
-      waUrl +=
-        `?text=${encodeURIComponent(msg)}`;
-
-    }
-
-
-    renderQR(
-      waUrl,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  phone.addEventListener(
-    "input",
-    generateWhatsAppQR
-  );
-
-  message.addEventListener(
-    "input",
-    generateWhatsAppQR
-  );
-
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "whatsapp_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-
-/* ==================================================
-   💰 UPI QR GENERATOR
-================================================== */
-
-if (isUpiPage) {
-
-  const upi =
-    document.getElementById("upi");
-
-  const name =
-    document.getElementById("name");
-
-  const amount =
-    document.getElementById("amount");
-
-  const note =
-    document.getElementById("note");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateUpiQR() {
-
-    const pa =
-      upi.value.trim();
-
-    const pn =
-      name.value.trim();
-
-    const am =
-      amount.value.trim();
-
-    const tn =
-      note.value.trim();
-
-
-    if (!pa) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Enter UPI ID
-        </p>`;
-
-      downloadBtn.disabled = true;
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    let upiUrl =
-      `upi://pay?pa=${encodeURIComponent(pa)}`;
-
-
-    if (pn) {
-
-      upiUrl +=
-        `&pn=${encodeURIComponent(pn)}`;
-
-    }
-
-
-    if (am) {
-
-      upiUrl +=
-        `&am=${encodeURIComponent(am)}`;
-
-    }
-
-
-    if (tn) {
-
-      upiUrl +=
-        `&tn=${encodeURIComponent(tn)}`;
-
-    }
-
-
-    renderQR(
-      upiUrl,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  upi.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-  name.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-  amount.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-  note.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "upi_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-
-/* ==================================================
-   📶 WIFI QR GENERATOR
-================================================== */
-
-if (isWifiPage) {
-
-  const ssid =
-    document.getElementById("ssid");
-
-  const password =
-    document.getElementById("password");
-
-  const security =
-    document.getElementById("security");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateWifiQR() {
-
-    const s =
-      ssid.value.trim();
-
-    const p =
-      password.value.trim();
-
-    const t =
-      security.value;
-
-
-    if (!s) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Enter WiFi name
-        </p>`;
-
-      downloadBtn.disabled = true;
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    let wifiString =
-      `WIFI:T:${t};S:${s};`;
-
-
-    if (t !== "nopass") {
-
-      wifiString +=
-        `P:${p};`;
-
-    }
-
-
-    wifiString += ";";
-
-
-    renderQR(
-      wifiString,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  /*
-   * Auto generate.
-   */
-
-  ssid.addEventListener(
-    "input",
-    generateWifiQR
-  );
-
-  password.addEventListener(
-    "input",
-    generateWifiQR
-  );
-
-  security.addEventListener(
-    "change",
-    generateWifiQR
-  );
-
-
-  /*
-   * Download.
-   */
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "wifi_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-});: "OFF"
-        );
-
-
-      } catch (err) {
-
-        console.error(
-          "Qscan: Torch error:",
-          err
-        );
-
-
-        torchOn = false;
-
-
-        torchBtn.innerHTML =
-          "⚠️ Limited support";
-
-
-        setTimeout(() => {
-
-          torchBtn.innerHTML =
-            "🔦 Torch";
-
-        }, 1800);
-
-      }
-
-    };
-
-  }
-
-
-/* ==================================================
-   🔄 SWITCH CAMERA
-================================================== */
-
-  if (flipBtn) {
-
-    flipBtn.onclick = async () => {
-
-      if (
-        !qrScanner ||
-        !cameras.length
-      ) {
-
-        return;
-
-      }
-
-
-      try {
-
-
-        /*
-         * Turn torch off before changing camera.
-         */
-
-        if (torchOn) {
-
-          try {
-
-            await qrScanner.applyVideoConstraints({
-
-              advanced: [
-                {
-                  torch: false
-                }
-              ]
-
-            });
-
-          } catch (err) {
-
-            console.log(
-              "Qscan: Could not turn torch off:",
-              err
-            );
-
-          }
-
-        }
-
-
-        torchOn = false;
-
-
-        if (torchBtn) {
-
-          torchBtn.innerHTML =
-            "🔦 Torch";
-
-        }
-
-
-        /*
-         * Stop current camera.
-         */
-
-        await qrScanner.stop();
-
-
-        /*
-         * Move to next camera.
-         */
-
-        currentCam =
-          (currentCam + 1) %
-          cameras.length;
-
-
-        /*
-         * Start next camera.
-         */
-
-        await qrScanner.start(
-
-          {
-            deviceId: {
-              exact:
-                cameras[currentCam].id
-            }
-          },
-
-          {
-
-            fps: 15,
-
-            qrbox: {
-              width: 260,
-              height: 260
-            },
-
-            aspectRatio: 1.777778
-
-          },
-
-          decoded => {
-
-            showPopup(decoded);
-
-          }
-
-        );
-
-
-        /*
-         * Re-enable autofocus.
-         */
-
-        await applyCameraFocus();
-
-
-        console.log(
-          "Qscan: Camera switched"
-        );
-
-
-      } catch (err) {
-
-        console.error(
-          "Qscan: Camera switch failed:",
-          err
-        );
-
-      }
-
-    };
-
-  }
-
-
-/* ==================================================
-   🖼️ UPLOAD QR IMAGE
-================================================== */
-
-  if (uploadBtn && fileInput) {
-
-    uploadBtn.onclick = () => {
-
-      fileInput.click();
-
-    };
-
-
-    fileInput.onchange =
-      async (e) => {
-
-        const file =
-          e.target.files[0];
-
-
-        if (!file) return;
-
-
-        /*
-         * Create temporary scanner element
-         * dynamically.
-         *
-         * This means you DO NOT need
-         * <div id="preview-temp"></div>
-         * in your HTML.
-         */
-
-        const tempId =
-          "qscan-temp-scanner";
-
-
-        const tempElement =
-          document.createElement("div");
-
-
-        tempElement.id =
-          tempId;
-
-
-        tempElement.style.display =
-          "none";
-
-
-        document.body.appendChild(
-          tempElement
-        );
-
-
-        const html5Temp =
-          new Html5Qrcode(tempId);
-
-
-        try {
-
-
-          const result =
-            await html5Temp.scanFile(
-              file,
-              false
-            );
-
-
-          showPopup(result);
-
-
-        } catch (err) {
-
-          console.log(
-            "Qscan: Image scan failed:",
-            err
-          );
-
-
-          showPopup(
-            "Invalid QR / Barcode"
-          );
-
-        }
-
-
-        /*
-         * Clean up temporary scanner.
-         */
-
-        try {
-
-          html5Temp.clear();
-
-        } catch (err) {
-
-          console.log(
-            "Qscan: Temporary scanner cleanup:",
-            err
-          );
-
-        }
-
-
-        tempElement.remove();
-
-
-        /*
-         * Allow the user to select the
-         * same image again.
-         */
-
-        fileInput.value = "";
-
-      };
-
-  }
-
-}
-
-
-/* ==================================================
-   ⚡ TEXT QR GENERATOR
-================================================== */
-
-if (isGeneratorPage) {
-
-  const input =
-    document.getElementById("qr-text");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateTextQR() {
-
-    const text =
-      input.value.trim();
-
-
-    if (!text) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Your QR will appear here
-        </p>`;
-
-
-      downloadBtn.disabled =
-        true;
-
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    renderQR(
-      text,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  input.addEventListener(
-    "input",
-    generateTextQR
-  );
-
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "qscan_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-
-/* ==================================================
-   💬 WHATSAPP QR GENERATOR
-================================================== */
-
-if (isWhatsappPage) {
-
-  const phone =
-    document.getElementById("phone");
-
-  const message =
-    document.getElementById("message");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateWhatsAppQR() {
-
-    let number =
-      phone.value.trim();
-
-    const msg =
-      message.value.trim();
-
-
-    if (!number) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Enter phone number
-        </p>`;
-
-
-      downloadBtn.disabled =
-        true;
-
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    number =
-      number.replace(
-        /\D/g,
-        ""
-      );
-
-
-    if (number.length < 10) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Invalid number
-        </p>`;
-
-
-      downloadBtn.disabled =
-        true;
-
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    let waUrl =
-      `https://wa.me/${number}`;
-
-
-    if (msg) {
-
-      waUrl +=
-        `?text=${encodeURIComponent(msg)}`;
-
-    }
-
-
-    renderQR(
-      waUrl,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  phone.addEventListener(
-    "input",
-    generateWhatsAppQR
-  );
-
-
-  message.addEventListener(
-    "input",
-    generateWhatsAppQR
-  );
-
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "whatsapp_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-
-/* ==================================================
-   💰 UPI QR GENERATOR
-================================================== */
-
-if (isUpiPage) {
-
-  const upi =
-    document.getElementById("upi");
-
-  const name =
-    document.getElementById("name");
-
-  const amount =
-    document.getElementById("amount");
-
-  const note =
-    document.getElementById("note");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateUpiQR() {
-
-    const pa =
-      upi.value.trim();
-
-    const pn =
-      name.value.trim();
-
-    const am =
-      amount.value.trim();
-
-    const tn =
-      note.value.trim();
-
-
-    if (!pa) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Enter UPI ID
-        </p>`;
-
-
-      downloadBtn.disabled =
-        true;
-
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    let upiUrl =
-      `upi://pay?pa=${encodeURIComponent(pa)}`;
-
-
-    if (pn) {
-
-      upiUrl +=
-        `&pn=${encodeURIComponent(pn)}`;
-
-    }
-
-
-    if (am) {
-
-      upiUrl +=
-        `&am=${encodeURIComponent(am)}`;
-
-    }
-
-
-    if (tn) {
-
-      upiUrl +=
-        `&tn=${encodeURIComponent(tn)}`;
-
-    }
-
-
-    renderQR(
-      upiUrl,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  upi.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-
-  name.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-
-  amount.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-
-  note.addEventListener(
-    "input",
-    generateUpiQR
-  );
-
-
-  downloadBtn.onclick = () => {
-
-    if (!qrCanvas) return;
-
-
-    const link =
-      document.createElement("a");
-
-
-    link.download =
-      "upi_qr.png";
-
-
-    link.href =
-      qrCanvas.toDataURL(
-        "image/png"
-      );
-
-
-    link.click();
-
-  };
-
-}
-
-
-/* ==================================================
-   📶 WIFI QR GENERATOR
-================================================== */
-
-if (isWifiPage) {
-
-  const ssid =
-    document.getElementById("ssid");
-
-  const password =
-    document.getElementById("password");
-
-  const security =
-    document.getElementById("security");
-
-  const downloadBtn =
-    document.getElementById("download-btn");
-
-  const outputBox =
-    document.getElementById("qr-output");
-
-  let qrCanvas = null;
-
-
-  function generateWifiQR() {
-
-    const s =
-      ssid.value.trim();
-
-    const p =
-      password.value.trim();
-
-    const t =
-      security.value;
-
-
-    if (!s) {
-
-      outputBox.innerHTML =
-        `<p class="qr-placeholder">
-          Enter WiFi name
-        </p>`;
-
-
-      downloadBtn.disabled =
-        true;
-
-
-      qrCanvas = null;
-
-      return;
-
-    }
-
-
-    let wifiString =
-      `WIFI:T:${t};S:${s};`;
-
-
-    if (t !== "nopass") {
-
-      wifiString +=
-        `P:${p};`;
-
-    }
-
-
-    wifiString += ";";
-
-
-    renderQR(
-      wifiString,
-      outputBox,
-      downloadBtn,
-      canvas => {
-
-        qrCanvas =
-          canvas;
-
-      }
-    );
-
-  }
-
-
-  /*
-   * Auto generate.
-   */
-
-  ssid.addEventListener(
-    "input",
-    generateWifiQR
-  );
-
-
-  password.addEventListener(
-    "input",}
-
-
-/* ==================================================
-   🔍 SCANNER
-================================================== */
-
-if (isScannerPage) {
-
-const previewId = "preview";
-const flipBtn = document.getElementById("flip-btn");
-const uploadBtn = document.getElementById("upload-btn");
-const fileInput = document.getElementById("file-input");
-
-const torchBtn = document.getElementById("torch-btn");
-let torchOn = false;
-
-const popup = document.getElementById("result-popup");
-const closePopupBtn = document.getElementById("close-popup");
-const resultText = document.getElementById("result-text");
-const copyBtn = document.getElementById("copy-btn");
-
-let qrScanner = null;
-let cameras = [];
-let currentCam = 0;
-
-
-/* ==================================================
-   🔗 URL DETECTION
-================================================== */
-
-function isURL(text) {
-  return /^https?:\/\//i.test(text);
-}
-
-
-/* ==================================================
-   📱 SHOW RESULT
-================================================== */
-
-function showPopup(text) {
-
-  if (navigator.vibrate) {
-    navigator.vibrate(120);
-  }
-
-  if (isURL(text)) {
-    resultText.innerHTML =
-      `<a href="${text}" target="_blank">${text}</a>`;
-  } else {
-    resultText.textContent = text;
-  }
-
-  copyBtn.disabled = false;
-  copyBtn.innerHTML = "Copy";
-
-  popup.classList.remove("hidden");
-}
-
-
-/* ==================================================
-   ❌ CLOSE RESULT
-================================================== */
-
-closePopupBtn.onclick = () => {
-  popup.classList.add("hidden");
-};
-
-
-/* ==================================================
-   📋 COPY RESULT
-================================================== */
-
-copyBtn.onclick = async () => {
-
-  const text = resultText.textContent;
-
-  try {
-
-    await navigator.clipboard.writeText(text);
-
-    copyBtn.innerHTML = "✓ Copied";
-    copyBtn.style.background = "#28c76f";
-
-    if (navigator.vibrate) {
-      navigator.vibrate(40);
-    }
-
-    setTimeout(() => {
-
-      copyBtn.innerHTML = "Copy";
-      copyBtn.style.background = "";
-
-    }, 2000);
-
-  } catch (err) {
-
-    console.error("Copy failed:", err);
-
-  }
-};
-
-
-/* ==================================================
-   🎯 CAMERA AUTOFOCUS
-================================================== */
-
-async function applyCameraFocus() {
-
-  if (!qrScanner) return;
-
-  try {
-
-    const track = qrScanner.getRunningTrack();
-
-    if (!track || !track.applyConstraints) {
-      return;
-    }
-
-    const capabilities =
-      track.getCapabilities
-        ? track.getCapabilities()
-        : {};
-
-
-    /*
-     * Request continuous autofocus
-     *
-     * Only apply the constraint when the
-     * current device/browser reports support.
-     */
+    /* ==================================================
+       UPLOAD QR IMAGE
+    ================================================== */
 
     if (
-      capabilities.focusMode &&
-      capabilities.focusMode.includes("continuous")
+      uploadBtn &&
+      fileInput
     ) {
 
-      await track.applyConstraints({
-        advanced: [
-          {
-            focusMode: "continuous"
+      uploadBtn.onclick = () => {
+
+        fileInput.click();
+
+      };
+
+
+      fileInput.onchange =
+        async event => {
+
+          const file =
+            event.target.files[0];
+
+          if (!file) return;
+
+
+          /*
+           * Create temporary scanner
+           * dynamically.
+           */
+
+          const tempId =
+            "qscan-temp-scanner";
+
+
+          const tempElement =
+            document.createElement("div");
+
+
+          tempElement.id =
+            tempId;
+
+          tempElement.style.display =
+            "none";
+
+
+          document.body.appendChild(
+            tempElement
+          );
+
+
+          const html5Temp =
+            new Html5Qrcode(tempId);
+
+
+          try {
+
+            const result =
+              await html5Temp.scanFile(
+                file,
+                false
+              );
+
+            showPopup(result);
+
+          } catch (err) {
+
+            console.log(
+              "Qscan: Image scan failed:",
+              err
+            );
+
+            showPopup(
+              "Invalid QR / Barcode"
+            );
+
           }
-        ]
-      });
 
-      console.log("Qscan: Continuous autofocus enabled");
 
-    } else {
+          try {
 
-      console.log(
-        "Qscan: Continuous autofocus is not supported"
+            await html5Temp.clear();
+
+          } catch (err) {
+
+            console.log(
+              "Qscan: Temporary scanner cleanup:",
+              err
+            );
+
+          }
+
+
+          tempElement.remove();
+
+
+          /* Allow same file again */
+
+          fileInput.value = "";
+
+        };
+
+    }
+
+  }
+
+
+  /* ==================================================
+     TEXT QR GENERATOR
+  ================================================== */
+
+  if (isGeneratorPage) {
+
+    const input =
+      document.getElementById("qr-text");
+
+    const downloadBtn =
+      document.getElementById("download-btn");
+
+    const outputBox =
+      document.getElementById("qr-output");
+
+    let qrCanvas = null;
+
+
+    function generateTextQR() {
+
+      const text =
+        input.value.trim();
+
+
+      if (!text) {
+
+        outputBox.innerHTML =
+          `<p class="qr-placeholder">
+            Your QR will appear here
+          </p>`;
+
+        downloadBtn.disabled = true;
+
+        qrCanvas = null;
+
+        return;
+      }
+
+
+      renderQR(
+        text,
+        outputBox,
+        downloadBtn,
+        canvas => {
+
+          qrCanvas =
+            canvas;
+
+        }
       );
 
     }
 
-  } catch (err) {
 
-    /*
-     * Some browsers/devices don't expose
-     * camera focus controls.
-     */
-
-    console.log(
-      "Qscan: Autofocus not supported:",
-      err
+    input.addEventListener(
+      "input",
+      generateTextQR
     );
 
-  }
-}
+
+    downloadBtn.onclick = () => {
+
+      if (!qrCanvas) return;
 
 
-/* ==================================================
-   📷 START SCANNER
-================================================== */
-
-async function startScanner(cameraIndex = null) {
-
-  try {
-
-    /*
-     * Get available cameras only once.
-     */
-
-    if (!cameras.length) {
-
-      cameras = await Html5Qrcode.getCameras();
-
-    }
+      const link =
+        document.createElement("a");
 
 
-    if (!cameras.length) {
-
-      alert("No camera detected.");
-
-      return;
-
-    }
+      link.download =
+        "qscan_qr.png";
 
 
-    /* ----------------------------------------------
-       Select camera
-    ---------------------------------------------- */
-
-    if (cameraIndex !== null) {
-
-      currentCam = cameraIndex;
-
-    } else {
-
-      let backCamIndex = cameras.findIndex(cam => {
-
-        const label =
-          cam.label.toLowerCase();
-
-        return (
-          label.includes("back") ||
-          label.includes("rear")
+      link.href =
+        qrCanvas.toDataURL(
+          "image/png"
         );
 
-      });
 
+      link.click();
 
-      /*
-       * If browser doesn't provide camera labels,
-       * use the last camera as a fallback.
-       */
-
-      if (backCamIndex === -1) {
-
-        backCamIndex = cameras.length - 1;
-
-      }
-
-      currentCam = backCamIndex;
-
-    }
-
-
-    /* ----------------------------------------------
-       Create scanner
-    ---------------------------------------------- */
-
-    qrScanner = new Html5Qrcode(previewId);
-
-
-    /* ----------------------------------------------
-       Start camera
-    ---------------------------------------------- */
-
-    await qrScanner.start(
-
-      {
-        deviceId: {
-          exact: cameras[currentCam].id
-        }
-      },
-
-      {
-
-        fps: 15,
-
-        qrbox: {
-          width: 260,
-          height: 260
-        },
-
-        /*
-         * Prefer normal phone camera aspect ratio.
-         */
-
-        aspectRatio: 1.777778
-
-      },
-
-      decoded => {
-
-        showPopup(decoded);
-
-      }
-
-    );
-
-
-    /* ----------------------------------------------
-       Apply autofocus
-    ---------------------------------------------- */
-
-    await applyCameraFocus();
-
-
-    /* ----------------------------------------------
-       Torch
-    ---------------------------------------------- */
-
-    if (torchBtn) {
-
-      torchBtn.style.display =
-        "inline-block";
-
-    }
-
-  } catch (err) {
-
-    console.error(
-      "Qscan camera error:",
-      err
-    );
-
-    alert(
-      "Unable to start camera. Please allow camera permission and try again."
-    );
+    };
 
   }
 
-}
+
+  /* ==================================================
+     WHATSAPP QR GENERATOR
+  ================================================== */
+
+  if (isWhatsappPage) {
+
+    const phone =
+      document.getElementById("phone");
+
+    const message =
+      document.getElementById("message");
+
+    const downloadBtn =
+      document.getElementById("download-btn");
+
+    const outputBox =
+      document.getElementById("qr-output");
+
+    let qrCanvas = null;
 
 
-/* ==================================================
-   🚀 START CAMERA
-================================================== */
+    function generateWhatsAppQR() {
 
-startScanner();
+      let number =
+        phone.value.trim();
 
-
-/* ==================================================
-   🔦 TORCH
-================================================== */
-
-if (torchBtn) {
-
-  torchBtn.onclick = async () => {
-
-    if (!qrScanner) return;
-
-    try {
-
-      const track =
-        qrScanner.getRunningTrack();
-
-      torchOn = !torchOn;
+      const msg =
+        message.value.trim();
 
 
-      await track.applyConstraints({
+      if (!number) {
 
-        advanced: [
-          {
-            torch: torchOn
-          }
-        ]
+        outputBox.innerHTML =
+          `<p class="qr-placeholder">
+            Enter phone number
+          </p>`;
 
-      });
+        downloadBtn.disabled = true;
 
+        qrCanvas = null;
 
-      torchBtn.innerHTML =
-        torchOn
-          ? "💡 On"
-          : "🔦 Torch";
+        return;
+      }
 
 
-    } catch (err) {
-
-      torchBtn.innerHTML =
-        "⚠️ Limited support";
-
-
-      setTimeout(() => {
-
-        torchBtn.innerHTML =
-          "🔦 Torch";
-
-      }, 1500);
+      number =
+        number.replace(
+          /\D/g,
+          ""
+        );
 
 
-      console.log(
-        "Torch not supported:",
-        err
+      if (number.length < 10) {
+
+        outputBox.innerHTML =
+          `<p class="qr-placeholder">
+            Invalid number
+          </p>`;
+
+        downloadBtn.disabled = true;
+
+        qrCanvas = null;
+
+        return;
+      }
+
+
+      let waUrl =
+        `https://wa.me/${number}`;
+
+
+      if (msg) {
+
+        waUrl +=
+          `?text=${encodeURIComponent(msg)}`;
+
+      }
+
+
+      renderQR(
+        waUrl,
+        outputBox,
+        downloadBtn,
+        canvas => {
+
+          qrCanvas =
+            canvas;
+
+        }
       );
 
     }
 
-  };
 
-}
+    phone.addEventListener(
+      "input",
+      generateWhatsAppQR
+    );
+
+    message.addEventListener(
+      "input",
+      generateWhatsAppQR
+    );
 
 
-/* ==================================================
-   🔄 SWITCH CAMERA
-================================================== */
+    downloadBtn.onclick = () => {
 
-flipBtn.onclick = async () => {
+      if (!qrCanvas) return;
 
-  if (!qrScanner || !cameras.length) {
-    return;
+
+      const link =
+        document.createElement("a");
+
+
+      link.download =
+        "whatsapp_qr.png";
+
+
+      link.href =
+        qrCanvas.toDataURL(
+          "image/png"
+        );
+
+
+      link.click();
+
+    };
+
   }
 
-  try {
 
-    await qrScanner.stop();
+  /* ==================================================
+     UPI QR GENERATOR
+  ================================================== */
+
+  if (isUpiPage) {
+
+    const upi =
+      document.getElementById("upi");
+
+    const name =
+      document.getElementById("name");
+
+    const amount =
+      document.getElementById("amount");
+
+    const note =
+      document.getElementById("note");
+
+    const downloadBtn =
+      document.getElementById("download-btn");
+
+    const outputBox =
+      document.getElementById("qr-output");
+
+    let qrCanvas = null;
 
 
-    torchOn = false;
+    function generateUpiQR() {
 
-    if (torchBtn) {
+      const pa =
+        upi.value.trim();
 
-      torchBtn.innerHTML =
-        "🔦 Torch";
+      const pn =
+        name.value.trim();
 
-    }
+      const am =
+        amount.value.trim();
 
-
-    /* Move to next camera */
-
-    currentCam =
-      (currentCam + 1) %
-      cameras.length;
+      const tn =
+        note.value.trim();
 
 
-    /* Start new camera */
+      if (!pa) {
 
-    await qrScanner.start(
+        outputBox.innerHTML =
+          `<p class="qr-placeholder">
+            Enter UPI ID
+          </p>`;
 
-      {
-        deviceId: {
-          exact:
-            cameras[currentCam].id
-        }
-      },
+        downloadBtn.disabled = true;
 
-      {
+        qrCanvas = null;
 
-        fps: 15,
+        return;
+      }
 
-        qrbox: {
-          width: 260,
-          height: 260
-        },
 
-        aspectRatio: 1.777778
+      let upiUrl =
+        `upi://pay?pa=${encodeURIComponent(pa)}`;
 
-      },
 
-      decoded => {
+      if (pn) {
 
-        showPopup(decoded);
+        upiUrl +=
+          `&pn=${encodeURIComponent(pn)}`;
 
       }
 
-    );
+
+      if (am) {
+
+        upiUrl +=
+          `&am=${encodeURIComponent(am)}`;
+
+      }
 
 
-    /* Re-enable autofocus */
+      if (tn) {
 
-    await applyCameraFocus();
+        upiUrl +=
+          `&tn=${encodeURIComponent(tn)}`;
 
-
-  } catch (err) {
-
-    console.error(
-      "Camera switch failed:",
-      err
-    );
-
-  }
-
-};
+      }
 
 
-/* ==================================================
-   🖼️ UPLOAD QR IMAGE
-================================================== */
+      renderQR(
+        upiUrl,
+        outputBox,
+        downloadBtn,
+        canvas => {
 
-uploadBtn.onclick = () => {
+          qrCanvas =
+            canvas;
 
-  fileInput.click();
-
-};
-
-
-fileInput.onchange = async (e) => {
-
-  const file =
-    e.target.files[0];
-
-  if (!file) return;
-
-
-  const html5Temp =
-    new Html5Qrcode("preview-temp");
-
-
-  try {
-
-    const result =
-      await html5Temp.scanFile(
-        file,
-        false
+        }
       );
 
-    showPopup(result);
+    }
 
-  } catch {
 
-    showPopup(
-      "Invalid QR / Barcode"
+    upi.addEventListener(
+      "input",
+      generateUpiQR
     );
 
-  }
+    name.addEventListener(
+      "input",
+      generateUpiQR
+    );
+
+    amount.addEventListener(
+      "input",
+      generateUpiQR
+    );
+
+    note.addEventListener(
+      "input",
+      generateUpiQR
+    );
 
 
-  html5Temp.clear();
+    downloadBtn.onclick = () => {
 
-};
-
-}
+      if (!qrCanvas) return;
 
 
-/* ==================================================
-   ⚡ TEXT GENERATOR
-================================================== */
-
-if (isGeneratorPage) {
-
-const input =
-  document.getElementById("qr-text");
-
-const downloadBtn =
-  document.getElementById("download-btn");
-
-const outputBox =
-  document.getElementById("qr-output");
-
-let qrCanvas = null;
+      const link =
+        document.createElement("a");
 
 
-function generateTextQR() {
-
-  const text =
-    input.value.trim();
+      link.download =
+        "upi_qr.png";
 
 
-  if (!text) {
+      link.href =
+        qrCanvas.toDataURL(
+          "image/png"
+        );
 
-    outputBox.innerHTML =
-      `<p class="qr-placeholder">
-        Your QR will appear here
-       </p>`;
 
-    downloadBtn.disabled = true;
+      link.click();
 
-    return;
+    };
 
   }
 
 
-  renderQR(
-    text,
-    outputBox,
-    downloadBtn,
-    (canvas) => {
+  /* ==================================================
+     WIFI QR GENERATOR
+  ================================================== */
 
-      qrCanvas = canvas;
+  if (isWifiPage) {
+
+    const ssid =
+      document.getElementById("ssid");
+
+    const password =
+      document.getElementById("password");
+
+    const security =
+      document.getElementById("security");
+
+    const downloadBtn =
+      document.getElementById("download-btn");
+
+    const outputBox =
+      document.getElementById("qr-output");
+
+    let qrCanvas = null;
+
+
+    function generateWifiQR() {
+
+      const s =
+        ssid.value.trim();
+
+      const p =
+        password.value.trim();
+
+      const t =
+        security.value;
+
+
+      if (!s) {
+
+        outputBox.innerHTML =
+          `<p class="qr-placeholder">
+            Enter WiFi name
+          </p>`;
+
+        downloadBtn.disabled = true;
+
+        qrCanvas = null;
+
+        return;
+      }
+
+
+      let wifiString =
+        `WIFI:T:${t};S:${s};`;
+
+
+      if (t !== "nopass") {
+
+        wifiString +=
+          `P:${p};`;
+
+      }
+
+
+      wifiString += ";";
+
+
+      renderQR(
+        wifiString,
+        outputBox,
+        downloadBtn,
+        canvas => {
+
+          qrCanvas =
+            canvas;
+
+        }
+      );
 
     }
-  );
-
-}
 
 
-input.addEventListener(
-  "input",
-  generateTextQR
-);
+    /* Auto generate */
 
+    ssid.addEventListener(
+      "input",
+      generateWifiQR
+    );
 
-downloadBtn.onclick = () => {
+    password.addEventListener(
+      "input",
+      generateWifiQR
+    );
 
-  if (!qrCanvas) return;
-
-
-  const link =
-    document.createElement("a");
-
-
-  link.download =
-    "qscan_qr.png";
-
-
-  link.href =
-    qrCanvas.toDataURL(
-      "image/png"
+    security.addEventListener(
+      "change",
+      generateWifiQR
     );
 
 
-  link.click();
+    /* Download */
 
-};
+    downloadBtn.onclick = () => {
 
-}
-
-
-/* ==================================================
-   💬 WHATSAPP GENERATOR
-================================================== */
-
-if (isWhatsappPage) {
-
-const phone =
-  document.getElementById("phone");
-
-const message =
-  document.getElementById("message");
-
-const downloadBtn =
-  document.getElementById("download-btn");
-
-const outputBox =
-  document.getElementById("qr-output");
-
-let qrCanvas = null;
+      if (!qrCanvas) return;
 
 
-function generateWhatsAppQR() {
-
-  let number =
-    phone.value.trim();
-
-  const msg =
-    message.value.trim();
+      const link =
+        document.createElement("a");
 
 
-  if (!number) {
+      link.download =
+        "wifi_qr.png";
 
-    outputBox.innerHTML =
-      "<p class='qr-placeholder'>Enter phone number</p>";
 
-    downloadBtn.disabled = true;
+      link.href =
+        qrCanvas.toDataURL(
+          "image/png"
+        );
 
-    return;
+
+      link.click();
+
+    };
 
   }
-
-
-  number =
-    number.replace(
-      /\D/g,
-      ""
-    );
-
-
-  if (number.length < 10) {
-
-    outputBox.innerHTML =
-      "<p class='qr-placeholder'>Invalid number</p>";
-
-    downloadBtn.disabled = true;
-
-    return;
-
-  }
-
-
-  let waUrl =
-    `https://wa.me/${number}`;
-
-
-  if (msg) {
-
-    waUrl +=
-      `?text=${encodeURIComponent(msg)}`;
-
-  }
-
-
-  renderQR(
-    waUrl,
-    outputBox,
-    downloadBtn,
-    (canvas) => {
-
-      qrCanvas = canvas;
-
-    }
-  );
-
-}
-
-
-phone.addEventListener(
-  "input",
-  generateWhatsAppQR
-);
-
-message.addEventListener(
-  "input",
-  generateWhatsAppQR
-);
-
-
-downloadBtn.onclick = () => {
-
-  if (!qrCanvas) return;
-
-
-  const link =
-    document.createElement("a");
-
-
-  link.download =
-    "whatsapp_qr.png";
-
-
-  link.href =
-    qrCanvas.toDataURL(
-      "image/png"
-    );
-
-
-  link.click();
-
-};
-
-}
-
-
-/* ==================================================
-   💰 UPI GENERATOR
-================================================== */
-
-if (isUpiPage) {
-
-const upi =
-  document.getElementById("upi");
-
-const name =
-  document.getElementById("name");
-
-const amount =
-  document.getElementById("amount");
-
-const note =
-  document.getElementById("note");
-
-const downloadBtn =
-  document.getElementById("download-btn");
-
-const outputBox =
-  document.getElementById("qr-output");
-
-let qrCanvas = null;
-
-
-function generateUpiQR() {
-
-  const pa =
-    upi.value.trim();
-
-  const pn =
-    name.value.trim();
-
-  const am =
-    amount.value.trim();
-
-  const tn =
-    note.value.trim();
-
-
-  if (!pa) {
-
-    outputBox.innerHTML =
-      "<p class='qr-placeholder'>Enter UPI ID</p>";
-
-    downloadBtn.disabled = true;
-
-    return;
-
-  }
-
-
-  let upiUrl =
-    `upi://pay?pa=${pa}`;
-
-
-  if (pn) {
-
-    upiUrl +=
-      `&pn=${encodeURIComponent(pn)}`;
-
-  }
-
-
-  if (am) {
-
-    upiUrl +=
-      `&am=${am}`;
-
-  }
-
-
-  if (tn) {
-
-    upiUrl +=
-      `&tn=${encodeURIComponent(tn)}`;
-
-  }
-
-
-  renderQR(
-    upiUrl,
-    outputBox,
-    downloadBtn,
-    (canvas) => {
-
-      qrCanvas = canvas;
-
-    }
-  );
-
-}
-
-
-upi.addEventListener(
-  "input",
-  generateUpiQR
-);
-
-name.addEventListener(
-  "input",
-  generateUpiQR
-);
-
-amount.addEventListener(
-  "input",
-  generateUpiQR
-);
-
-note.addEventListener(
-  "input",
-  generateUpiQR
-);
-
-
-downloadBtn.onclick = () => {
-
-  if (!qrCanvas) return;
-
-
-  const link =
-    document.createElement("a");
-
-
-  link.download =
-    "upi_qr.png";
-
-
-  link.href =
-    qrCanvas.toDataURL(
-      "image/png"
-    );
-
-
-  link.click();
-
-};
-
-}
-
-
-/* ==================================================
-   📶 WIFI GENERATOR
-================================================== */
-
-if (isWifiPage) {
-
-const ssid =
-  document.getElementById("ssid");
-
-const password =
-  document.getElementById("password");
-
-const security =
-  document.getElementById("security");
-
-const downloadBtn =
-  document.getElementById("download-btn");
-
-const outputBox =
-  document.getElementById("qr-output");
-
-let qrCanvas = null;
-
-
-function generateWifiQR() {
-
-  const s =
-    ssid.value.trim();
-
-  const p =
-    password.value.trim();
-
-  const t =
-    security.value;
-
-
-  if (!s) {
-
-    outputBox.innerHTML =
-      "<p class='qr-placeholder'>Enter WiFi name</p>";
-
-    downloadBtn.disabled = true;
-
-    return;
-
-  }
-
-
-  let wifiString =
-    `WIFI:T:${t};S:${s};`;
-
-
-  if (t !== "nopass") {
-
-    wifiString +=
-      `P:${p};`;
-
-  }
-
-
-  wifiString += ";";
-
-
-  renderQR(
-    wifiString,
-    outputBox,
-    downloadBtn,
-    (canvas) => {
-
-      qrCanvas = canvas;
-
-    }
-  );
-
-}
-
-
-/* 🔥 AUTO GENERATE */
-
-ssid.addEventListener(
-  "input",
-  generateWifiQR
-);
-
-password.addEventListener(
-  "input",
-  generateWifiQR
-);
-
-security.addEventListener(
-  "change",
-  generateWifiQR
-);
-
-
-/* DOWNLOAD */
-
-downloadBtn.onclick = () => {
-
-  if (!qrCanvas) return;
-
-
-  const link =
-    document.createElement("a");
-
-
-  link.download =
-    "wifi_qr.png";
-
-
-  link.href =
-    qrCanvas.toDataURL(
-      "image/png"
-    );
-
-
-  link.click();
-
-};
-
-}
 
 });
